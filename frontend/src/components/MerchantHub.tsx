@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function MerchantHub() {
   return (
-    <div className="fixed bottom-24 left-0 right-0 z-40 px-4 pointer-events-none">
+    <div className="md:hidden fixed bottom-24 left-0 right-0 z-40 px-4 pointer-events-none">
       <div className="max-w-xl mx-auto w-full">
         <div className="bg-[#1a1625] rounded-3xl p-4 shadow-2xl border border-gray-800/60 pointer-events-auto backdrop-blur-xl bg-opacity-95">
           <div className="flex items-center justify-between mb-5">

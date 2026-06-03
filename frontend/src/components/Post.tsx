@@ -15,9 +15,9 @@ interface PostProps {
 
 export default function Post({ storeName, distance, location, storeImage, postImage, title, description, badge, timeInfo }: PostProps) {
   return (
-    <div className="bg-white mb-2 pb-5">
+    <div className="bg-white mb-6 pb-6 border-b border-gray-200 last:border-0 md:border md:rounded-xl md:mb-8 md:pb-4 md:shadow-sm">
       {/* Post Header */}
-      <div className="flex items-center justify-between px-5 py-4">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="w-[42px] h-[42px] rounded-full overflow-hidden border border-gray-200 shadow-sm">
             <Image unoptimized src={storeImage} alt={storeName} width={42} height={42} className="w-full h-full object-cover" />
@@ -36,7 +36,7 @@ export default function Post({ storeName, distance, location, storeImage, postIm
       </div>
 
       {/* Post Image */}
-      <div className="relative w-full aspect-[4/5] bg-gray-100 overflow-hidden">
+      <div className="relative w-full aspect-[4/5] sm:aspect-square md:aspect-[4/5] bg-gray-100 overflow-hidden sm:rounded-sm md:rounded-none">
         <Image unoptimized src={postImage} alt={title} fill className="object-cover" />
         {badge && (
           <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1.5 rounded shadow-sm tracking-wide">

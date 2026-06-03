@@ -2,7 +2,7 @@ import { Home, Map, Plus, Wallet, User } from "lucide-react";
 
 export default function BottomNavigation() {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
       <div className="max-w-xl mx-auto w-full px-6 h-[72px] flex items-center justify-between relative">
         <button className="flex flex-col items-center justify-center gap-1.5 text-purple-600 transition-transform active:scale-95">
           <Home size={24} strokeWidth={2.5} className="fill-purple-100" />
