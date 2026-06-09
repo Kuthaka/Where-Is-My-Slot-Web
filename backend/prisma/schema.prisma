@@ -28,14 +28,29 @@ model User {
   businesses Business[]
 }
 
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 model Business {
   id          String   @id @default(uuid())
   ownerId     String
   name        String
+  email       String?
+  phone       String?
   description String?
   address     String?
   latitude    Float?
   longitude   Float?
+  timings     Json?    // e.g., { "monday": { "open": "09:00", "close": "18:00" }, ... }
+  parking     Json?    // e.g., { "available": true, "slots": 50 }
+  images      String[] // Array of image URLs
   isVerified  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
