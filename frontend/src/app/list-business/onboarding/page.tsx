@@ -154,102 +154,102 @@ export default function BusinessOnboardingPage() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Business Name</label>
+              <label className="block text-sm font-bold text-[#2C5EAD] mb-2">Business Name</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="e.g. Social Offline"
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] text-gray-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+              <label className="block text-sm font-bold text-[#2C5EAD] mb-2">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows={4}
+                rows={3}
                 placeholder="Tell us about your business..."
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] resize-none text-gray-900"
               />
             </div>
           </div>
         );
       case 2:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Public Email</label>
+              <label className="block text-sm font-bold text-[#2C5EAD] mb-2">Public Email</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] text-gray-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
+              <label className="block text-sm font-bold text-[#2C5EAD] mb-2">Phone Number</label>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] text-gray-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Full Address</label>
+              <label className="block text-sm font-bold text-[#2C5EAD] mb-2">Full Address</label>
               <textarea
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                rows={3}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                rows={2}
+                className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] resize-none text-gray-900"
               />
             </div>
           </div>
         );
       case 3:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-            <h3 className="font-bold text-gray-900 mb-4">Monday to Friday</h3>
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+            <h3 className="font-bold text-[#2C5EAD] mb-2">Monday to Friday</h3>
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Opening Time</label>
-                <input type="time" defaultValue="09:00" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                <label className="block text-xs font-bold text-[#1591DC] mb-2 uppercase tracking-wide">Opening Time</label>
+                <input type="time" defaultValue="09:00" className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] text-gray-900" />
               </div>
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">Closing Time</label>
-                <input type="time" defaultValue="22:00" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                <label className="block text-xs font-bold text-[#1591DC] mb-2 uppercase tracking-wide">Closing Time</label>
+                <input type="time" defaultValue="22:00" className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] text-gray-900" />
               </div>
             </div>
           </div>
         );
       case 4:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Is Parking Available?</label>
+              <label className="block text-sm font-bold text-[#2C5EAD] mb-2">Is Parking Available?</label>
               <div className="flex gap-4 mb-6">
-                <button className="flex-1 py-3 rounded-xl border-2 border-purple-600 bg-purple-50 text-purple-700 font-bold">Yes</button>
-                <button className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50">No</button>
+                <button className="flex-1 py-3 rounded-xl border-2 border-[#1591DC] bg-[#C4E2F5]/30 text-[#2C5EAD] font-bold">Yes</button>
+                <button className="flex-1 py-3 rounded-xl border-2 border-[#C4E2F5] text-gray-500 font-bold hover:bg-[#C4E2F5]/10">No</button>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Approximate Slots</label>
-              <input type="number" defaultValue="20" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500" />
+              <label className="block text-sm font-bold text-[#2C5EAD] mb-2">Approximate Slots</label>
+              <input type="number" defaultValue="20" className="w-full bg-white border border-[#C4E2F5] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4BB8FA] focus:border-[#4BB8FA] text-gray-900" />
             </div>
           </div>
         );
       case 5:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-            <label className="border-2 border-dashed border-gray-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative">
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+            <label className="border-2 border-dashed border-[#4BB8FA] rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-[#C4E2F5]/20 hover:bg-[#C4E2F5]/40 transition-colors cursor-pointer relative">
               <input 
                 type="file" 
                 accept="image/*" 
@@ -257,9 +257,9 @@ export default function BusinessOnboardingPage() {
                 onChange={handleImageUpload}
                 disabled={loading}
               />
-              <ImageIcon className="w-12 h-12 text-gray-400 mb-3" />
-              <p className="text-sm font-bold text-gray-700">{loading ? "Uploading..." : "Click to upload images"}</p>
-              <p className="text-xs text-gray-500 mt-1">SVG, PNG, JPG or GIF (max. 5MB)</p>
+              <ImageIcon className="w-12 h-12 text-[#1591DC] mb-3" />
+              <p className="text-sm font-bold text-[#2C5EAD]">{loading ? "Uploading..." : "Click to upload images"}</p>
+              <p className="text-xs text-[#1591DC] mt-1 font-medium">SVG, PNG, JPG or GIF (max. 5MB)</p>
             </label>
             <div className="grid grid-cols-3 gap-4">
               {formData.images.map((img, index) => (
@@ -280,27 +280,27 @@ export default function BusinessOnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Tell us about your business</h2>
-          <p className="mt-2 text-gray-500">Step {currentStep} of {STEPS.length}: {STEPS[currentStep-1].title}</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-3xl bg-white shadow-xl rounded-3xl p-6 sm:p-8 border border-[#C4E2F5]">
+        <div className="mb-6 text-center">
+          <h2 className="text-3xl font-extrabold text-[#2C5EAD] tracking-tight">Tell us about your business</h2>
+          <p className="mt-2 text-[#1591DC] font-bold">Step {currentStep} of {STEPS.length}: {STEPS[currentStep-1].title}</p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8 relative">
-          <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-purple-100">
-            <div style={{ width: `${(currentStep / STEPS.length) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-600 transition-all duration-500"></div>
+        <div className="mb-6 relative">
+          <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-[#C4E2F5]">
+            <div style={{ width: `${(currentStep / STEPS.length) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#1591DC] transition-all duration-500"></div>
           </div>
           <div className="flex justify-between w-full px-2">
             {STEPS.map((step) => {
               const Icon = step.icon;
               return (
                 <div key={step.id} className="flex flex-col items-center gap-2">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${currentStep >= step.id ? 'border-purple-600 bg-purple-600 text-white shadow-md' : 'border-gray-200 bg-white text-gray-400'}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${currentStep >= step.id ? 'border-[#1591DC] bg-[#1591DC] text-white shadow-md' : 'border-[#C4E2F5] bg-white text-gray-400'}`}>
                     <Icon size={18} strokeWidth={2.5} />
                   </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider hidden sm:block ${currentStep >= step.id ? 'text-purple-600' : 'text-gray-400'}`}>{step.title}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider hidden sm:block ${currentStep >= step.id ? 'text-[#1591DC]' : 'text-gray-400'}`}>{step.title}</span>
                 </div>
               )
             })}
@@ -308,7 +308,7 @@ export default function BusinessOnboardingPage() {
         </div>
 
         {/* Main Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sm:p-10 mb-8 min-h-[400px]">
+        <div className="mb-6">
           {renderStepContent()}
         </div>
 
@@ -317,14 +317,14 @@ export default function BusinessOnboardingPage() {
           <button
             onClick={handlePrev}
             disabled={currentStep === 1 || loading}
-            className="px-6 py-3 border-2 border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 border-2 border-[#C4E2F5] text-[#1591DC] font-bold rounded-xl hover:bg-[#C4E2F5]/20 hover:text-[#2C5EAD] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Back
           </button>
           <button
             onClick={handleNext}
             disabled={loading}
-            className="px-8 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-600/30 disabled:opacity-50 flex items-center gap-2"
+            className="px-8 py-3 bg-[#1591DC] text-white font-bold rounded-xl hover:bg-[#2C5EAD] transition-colors shadow-lg shadow-[#1591DC]/30 disabled:opacity-50 flex items-center gap-2"
           >
             {loading ? "Processing..." : currentStep === STEPS.length ? (
               <>Finish Setup <CheckCircle size={20} /></>

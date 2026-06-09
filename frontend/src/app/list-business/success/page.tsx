@@ -29,7 +29,7 @@ export default function BusinessSuccessPage() {
             <li className="flex gap-2"><span className="text-green-500">✓</span> You can start adding exclusive offers!</li>
           </ul>
 
-          <Link href="/login" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-purple-600/30 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors group">
+          <Link href="/login" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-[#1591DC]/30 text-sm font-bold text-white bg-[#1591DC] hover:bg-[#2C5EAD] transition-colors group">
             Login to Merchant Dashboard
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Link>

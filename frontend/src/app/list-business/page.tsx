@@ -55,30 +55,36 @@ export default function ListBusinessEmailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center border-2 border-yellow-200 shadow-sm">
-          <Store className="w-8 h-8 text-yellow-600" />
+    <div 
+      className="min-h-screen w-full flex items-center justify-start px-4 sm:px-12 lg:px-24"
+      style={{
+        backgroundImage: "url('/banner-1.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat"
+      }}
+    >
+      <div className="w-full max-w-md bg-white/95 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-white/40">
+        <div className="flex flex-col items-center">
+          <img src="/icons/business-001.png" alt="Business Icon" className="w-20 h-20 object-contain mb-4 drop-shadow-sm" />
+          <h2 className="text-3xl font-extrabold text-[#2C5EAD] tracking-tight text-center">
+            List your business
+          </h2>
+          <p className="mt-2 text-center text-sm font-bold text-[#1591DC]/80">
+            Join thousands of merchants growing their business with us.
+          </p>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-          List your business
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Join thousands of merchants growing their business with us.
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-2xl sm:px-10 border border-gray-100">
+        <div className="mt-8">
           {!showOtp ? (
             <form className="space-y-6" onSubmit={handleSendOtp}>
               <div>
-                <label htmlFor="email" className="block text-sm font-bold text-gray-700">
+                <label htmlFor="email" className="block text-sm font-bold text-[#2C5EAD]">
                   Business Email address
                 </label>
                 <div className="mt-2 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                    <Mail className="h-5 w-5 text-[#1591DC]" />
                   </div>
                   <input
                     id="email"
@@ -88,19 +94,19 @@ export default function ListBusinessEmailPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-xl py-3 bg-gray-50 border outline-none transition-colors"
+                    className="focus:ring-[#4BB8FA] focus:border-[#4BB8FA] block w-full pl-10 sm:text-sm border-[#C4E2F5] rounded-xl py-3 bg-white border outline-none transition-colors text-gray-900"
                     placeholder="you@company.com"
                   />
                 </div>
               </div>
 
-              {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+              {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
               <div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-yellow-900 bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors disabled:opacity-50"
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#1591DC] hover:bg-[#2C5EAD] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4BB8FA] transition-colors disabled:opacity-50"
                 >
                   {loading ? "Sending..." : "Continue with Email"}
                   {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
@@ -110,9 +116,9 @@ export default function ListBusinessEmailPage() {
           ) : (
             <form className="space-y-6" onSubmit={handleVerifyOtp}>
               <div className="text-center mb-6">
-                <ShieldCheck className="mx-auto h-12 w-12 text-green-500 mb-3" />
-                <h3 className="text-lg font-bold text-gray-900">Enter Verification Code</h3>
-                <p className="text-sm text-gray-500 mt-1">We've sent a code to <span className="font-bold text-gray-900">{email}</span></p>
+                <ShieldCheck className="mx-auto h-12 w-12 text-[#4BB8FA] mb-3" />
+                <h3 className="text-lg font-bold text-[#2C5EAD]">Enter Verification Code</h3>
+                <p className="text-sm font-medium text-gray-500 mt-1">We've sent a code to <span className="font-bold text-[#1591DC]">{email}</span></p>
               </div>
               
               <div>
@@ -124,26 +130,26 @@ export default function ListBusinessEmailPage() {
                   required
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  className="focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-2xl text-center font-mono tracking-widest border-gray-300 rounded-xl py-3 bg-gray-50 border outline-none transition-colors"
+                  className="focus:ring-[#4BB8FA] focus:border-[#4BB8FA] block w-full sm:text-2xl text-center font-mono tracking-widest border-[#C4E2F5] rounded-xl py-3 bg-white border outline-none transition-colors text-gray-900"
                   placeholder="000000"
                   maxLength={6}
                 />
               </div>
 
-              {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
+              {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
               <div>
                 <button
                   type="submit"
                   disabled={loading || otp.length < 6}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#1591DC] hover:bg-[#2C5EAD] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4BB8FA] transition-colors disabled:opacity-50"
                 >
                   {loading ? "Verifying..." : "Verify & Continue"}
                 </button>
               </div>
               
               <div className="text-center">
-                <button type="button" onClick={() => setShowOtp(false)} className="text-sm font-bold text-purple-600 hover:text-purple-500">
+                <button type="button" onClick={() => setShowOtp(false)} className="text-sm font-bold text-[#4BB8FA] hover:text-[#1591DC] transition-colors">
                   Change email address
                 </button>
               </div>
