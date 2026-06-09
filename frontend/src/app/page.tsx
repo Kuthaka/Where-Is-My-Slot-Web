@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import FlashDeals from "@/components/FlashDeals";
 import Post from "@/components/Post";
 import MerchantHub from "@/components/MerchantHub";
+import { Store } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 import SideNav from "@/components/SideNav";
 import RightPanel from "@/components/RightPanel";
@@ -63,7 +64,22 @@ export default function Home() {
         </div>
       </main>
 
-      <MerchantHub />
+      {/* <MerchantHub /> */}
+      
+      {/* Mobile Floating 'List your business' Button */}
+      <div className="md:hidden fixed bottom-24 right-4 z-40 flex items-center justify-end">
+        <button className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 rounded-full flex items-center justify-center p-4 shadow-lg shadow-yellow-400/40 border border-yellow-300 transition-transform active:scale-95 group relative">
+          <Store size={28} strokeWidth={2.5} />
+          <span className="absolute -top-2 -right-1 bg-green-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow-sm rotate-12 uppercase tracking-wider border border-green-400 z-10">FREE</span>
+          
+          {/* Tooltip on long press */}
+          <span className="absolute right-full mr-4 bg-gray-900 text-white text-xs font-bold py-2 px-3 rounded-xl opacity-0 invisible group-active:opacity-100 group-active:visible transition-all duration-300 whitespace-nowrap shadow-xl flex items-center pointer-events-none">
+            List your business
+            <div className="absolute -right-1.5 w-3 h-3 bg-gray-900 rotate-45 rounded-sm"></div>
+          </span>
+        </button>
+      </div>
+
       <BottomNavigation />
     </div>
   );
