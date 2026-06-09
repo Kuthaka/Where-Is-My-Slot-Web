@@ -4,11 +4,19 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { JwtStrategy } from './jwt.strategy';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthController } from './presentation/controllers/auth.controller';
+import { SendOtpUseCase } from './application/use-cases/send-otp.use-case';
+import { VerifyOtpUseCase } from './application/use-cases/verify-otp.use-case';
+import { LoginBusinessUseCase } from './application/use-cases/login-business.use-case';
+import { SignupBusinessUseCase } from './application/use-cases/signup-business.use-case';
+import { OTP_REPOSITORY } from './domain/repositories/otp.repository.interface';
+import { PrismaOtpRepository } from './infrastructure/repositories/prisma-otp.repository';
+import { UsersModule } from '../users/users.module';
+import { PrismaService } from '../../shared/database/prisma.service';
 
 @Module({
   imports: [
+    UsersModule,
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -36,7 +44,18 @@ import { AuthService } from './auth.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [JwtStrategy, AuthService],
-  exports: [JwtModule, AuthService],
+  providers: [
+    PrismaService,
+    JwtStrategy,
+    SendOtpUseCase,
+    VerifyOtpUseCase,
+    LoginBusinessUseCase,
+    SignupBusinessUseCase,
+    {
+      provide: OTP_REPOSITORY,
+      useClass: PrismaOtpRepository,
+    },
+  ],
+  exports: [JwtModule],
 })
 export class AuthModule {}

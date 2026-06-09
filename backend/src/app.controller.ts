@@ -1,5 +1,5 @@
 import { Controller, Get, Post } from '@nestjs/common';
-import { PrismaService } from './core/database/prisma.service';
+import { PrismaService } from './shared/database/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UserRole } from './shared/enums/user-role.enum';
 

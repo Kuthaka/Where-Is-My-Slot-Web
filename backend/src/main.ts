@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
-import { HttpExceptionFilter } from './core/filters/http-exception.filter';
-import { TransformInterceptor } from './core/interceptors/transform.interceptor';
-import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
+import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
+import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
+import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {

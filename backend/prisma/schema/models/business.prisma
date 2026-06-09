@@ -1,0 +1,20 @@
+model Business {
+  id          String   @id @default(uuid())
+  ownerId     String
+  name        String
+  email       String?
+  phone       String?
+  description String?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  timings     Json?    
+  parking     Json?    
+  images      String[] 
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User     @relation(fields: [ownerId], references: [id])
+  offers      Offer[]
+}
