@@ -7,12 +7,26 @@ import { useEffect, useState } from "react";
 export default function LeftSidebar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [userData, setUserData] = useState<{name: string, username: string | null} | null>(null);
 
   useEffect(() => {
     setMounted(true);
     const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
+      fetch("http://localhost:5000/api/v1/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+         const user = data.data || data;
+         if (user && user.name) {
+           setUserData(user);
+         }
+      })
+      .catch(err => console.error("Failed to fetch user data", err));
     }
   }, []);
 
@@ -35,8 +49,12 @@ export default function LeftSidebar() {
           </div>
 
           <div className="text-center mt-4 w-full">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Elviz Dizzouza</h2>
-            <p className="text-sm text-gray-500 mb-6">@elvizoodem</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              {userData?.name || "Loading..."}
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {userData?.username ? `@${userData.username}` : (userData ? "@user" : "...")}
+            </p>
             <Link href="/profile" className="block w-full py-3 rounded-xl bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors font-bold text-sm text-gray-800 dark:text-gray-200 shadow-inner">
               My Profile
             </Link>

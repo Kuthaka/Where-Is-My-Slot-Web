@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Mail, ArrowRight, KeyRound } from "lucide-react";
+import { User, Mail, ArrowRight, KeyRound, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { toast } from "react-hot-toast";
 
 export default function UserLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/v1/auth/login", {
@@ -30,13 +30,14 @@ export default function UserLoginPage() {
       localStorage.setItem("token", data.data.accessToken);
       document.cookie = `token=${data.data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
       
+      toast.success("Successfully logged in!");
       // Force hard navigation to reload components that check token on mount
       window.location.href = "/";
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("Invalid credentials");
+        toast.error("Invalid credentials");
       }
     } finally {
       setLoading(false);
@@ -96,17 +97,22 @@ export default function UserLoginPage() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
+                    className="block w-full pl-11 pr-12 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
-
-              {error && <p className="text-red-500 text-sm font-bold text-center bg-red-50 dark:bg-red-500/10 py-2 rounded-xl">{error}</p>}
 
               <div className="pt-2">
                 <button

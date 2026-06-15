@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Mail, KeyRound, ArrowRight } from "lucide-react";
+import { Shield, Mail, KeyRound, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/v1/auth/login", {
@@ -36,12 +36,13 @@ export default function AdminLoginPage() {
       const token = data.data?.accessToken || data.accessToken;
       localStorage.setItem("token", token);
       document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Strict`;
+      toast.success("Welcome, Admin");
       router.push("/admin/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("Invalid credentials");
+        toast.error("Invalid credentials");
       }
     } finally {
       setLoading(false);
@@ -95,21 +96,22 @@ export default function AdminLoginPage() {
                 </div>
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 sm:text-sm rounded-xl py-3 bg-gray-900 border border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-600"
+                  className="block w-full pl-10 pr-12 sm:text-sm rounded-xl py-3 bg-gray-900 border border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-600"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-300 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-3">
-                <p className="text-red-400 text-sm font-bold text-center">{error}</p>
-              </div>
-            )}
 
             <div>
               <button

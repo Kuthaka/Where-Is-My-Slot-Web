@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
@@ -38,6 +39,7 @@ export default function Header() {
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     setIsLoggedIn(false);
     setDropdownOpen(false);
+    toast.success("Successfully logged out");
     router.push("/login");
   };
 

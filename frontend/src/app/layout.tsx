@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "WhereIsMySlot",
@@ -38,6 +39,23 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: '#333',
+                color: '#fff',
+                borderRadius: '12px',
+                fontWeight: 'bold',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#facc15',
+                  secondary: '#333',
+                },
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

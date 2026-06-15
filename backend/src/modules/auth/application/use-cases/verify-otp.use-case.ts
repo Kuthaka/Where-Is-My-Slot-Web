@@ -34,6 +34,7 @@ export class VerifyOtpUseCase {
       user = new User(
         uuidv4(),
         email.split('@')[0],
+        null, // username
         email,
         randomPassword,
         false,

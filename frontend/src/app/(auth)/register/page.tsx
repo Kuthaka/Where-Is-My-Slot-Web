@@ -1,30 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, Mail, ArrowRight, KeyRound, UserPlus, Phone } from "lucide-react";
+import { User, Mail, ArrowRight, KeyRound, UserPlus, Phone, CheckCircle2, XCircle, AtSign, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { toast } from "react-hot-toast";
 
 export default function UserRegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     phone: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
+  const [emailStatus, setEmailStatus] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === "username") setUsernameStatus("idle");
+    if (e.target.name === "email") setEmailStatus("idle");
   };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (formData.username.length > 2) {
+        setUsernameStatus("loading");
+        try {
+          const res = await fetch(`http://localhost:5000/api/v1/auth/check-availability?username=${formData.username}`);
+          const data = await res.json();
+          setUsernameStatus(data.data?.usernameAvailable ? "valid" : "invalid");
+        } catch (e) {
+          setUsernameStatus("invalid");
+        }
+      }
+    }, 200);
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.username]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (formData.email.includes("@") && formData.email.includes(".")) {
+        setEmailStatus("loading");
+        try {
+          const res = await fetch(`http://localhost:5000/api/v1/auth/check-availability?email=${formData.email}`);
+          const data = await res.json();
+          setEmailStatus(data.data?.emailAvailable ? "valid" : "invalid");
+        } catch (e) {
+          setEmailStatus("invalid");
+        }
+      }
+    }, 200);
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.email]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/v1/auth/register", {
@@ -36,14 +73,14 @@ export default function UserRegisterPage() {
       if (!res.ok) {
         throw new Error(data.message?.message || data.message || "Registration failed");
       }
-      
+      toast.success("Account created successfully!");
       // Auto login after register (optional, or redirect to login)
       router.push("/login?registered=true");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("Registration failed");
+        toast.error("Registration failed");
       }
     } finally {
       setLoading(false);
@@ -111,6 +148,33 @@ export default function UserRegisterPage() {
               </div>
 
               <div>
+                <label htmlFor="username" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <AtSign className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    required
+                    value={formData.username}
+                    onChange={handleChange}
+                    className="block w-full pl-11 pr-10 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
+                    placeholder="localdialuser"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    {usernameStatus === "loading" && <div className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>}
+                    {usernameStatus === "valid" && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    {usernameStatus === "invalid" && <XCircle className="h-5 w-5 text-red-500" />}
+                  </div>
+                </div>
+                {usernameStatus === "invalid" && <p className="text-red-500 text-xs mt-1 ml-1 font-semibold">Username is not available</p>}
+              </div>
+
+              <div>
                 <label htmlFor="email" className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                   Email address
                 </label>
@@ -125,10 +189,16 @@ export default function UserRegisterPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
+                    className="block w-full pl-11 pr-10 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
                     placeholder="you@example.com"
                   />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    {emailStatus === "loading" && <div className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>}
+                    {emailStatus === "valid" && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    {emailStatus === "invalid" && <XCircle className="h-5 w-5 text-red-500" />}
+                  </div>
                 </div>
+                {emailStatus === "invalid" && <p className="text-red-500 text-xs mt-1 ml-1 font-semibold">Email is already registered</p>}
               </div>
 
               <div>
@@ -163,22 +233,27 @@ export default function UserRegisterPage() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
+                    className="block w-full pl-11 pr-12 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
-
-              {error && <p className="text-red-500 text-sm font-bold text-center bg-red-50 dark:bg-red-500/10 py-2 rounded-xl">{error}</p>}
 
               <div className="pt-4">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || usernameStatus === "invalid" || usernameStatus === "loading" || emailStatus === "invalid" || emailStatus === "loading"}
                   className="w-full flex items-center justify-center py-4 px-4 rounded-2xl text-sm font-black text-black bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-400/20 transition-all disabled:opacity-50 hover:scale-[1.02]"
                 >
                   {loading ? "Creating account..." : "Register"}

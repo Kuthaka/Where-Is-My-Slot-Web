@@ -5,16 +5,21 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
-export class SignupBusinessUseCase {
+export class RegisterUserUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
   ) {}
 
-  async execute(data: { name: string; email: string; passwordPlain: string }) {
-    const existing = await this.userRepository.findByEmail(data.email);
-    if (existing) {
+  async execute(data: { name: string; username: string; email: string; passwordPlain: string }) {
+    const existingEmail = await this.userRepository.findByEmail(data.email);
+    if (existingEmail) {
       throw new BadRequestException('User with this email already exists');
+    }
+
+    const existingUsername = await this.userRepository.findByUsername(data.username);
+    if (existingUsername) {
+      throw new BadRequestException('User with this username already exists');
     }
     
     const passwordHash = await bcrypt.hash(data.passwordPlain, 10);
@@ -22,12 +27,12 @@ export class SignupBusinessUseCase {
     const user = new User(
       uuidv4(),
       data.name,
-      null, // username
+      data.username,
       data.email,
       passwordHash,
-      true,
-      'BUSINESS',
-      true,
+      true, // isPasswordSet
+      'USER',
+      true, // isActive
       new Date(),
       new Date(),
     );

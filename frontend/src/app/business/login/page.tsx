@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Store, Mail, ArrowRight, KeyRound } from "lucide-react";
+import { Store, Mail, ArrowRight, KeyRound, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 
 export default function BusinessLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState<"password" | "email">("password");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/v1/auth/login", {
@@ -29,12 +29,13 @@ export default function BusinessLoginPage() {
       }
       localStorage.setItem("token", data.data.accessToken);
       document.cookie = `token=${data.data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
+      toast.success("Successfully logged in");
       router.push("/business/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("Invalid credentials");
+        toast.error("Invalid credentials");
       }
     } finally {
       setLoading(false);
@@ -43,7 +44,6 @@ export default function BusinessLoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       // Bypassing OTP logic for smooth testing
@@ -58,12 +58,13 @@ export default function BusinessLoginPage() {
       localStorage.setItem("token", data.data?.accessToken || data.accessToken);
       document.cookie = `token=${data.data?.accessToken || data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
 
+      toast.success("Successfully authenticated");
       router.push("/business/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        toast.error(err.message);
       } else {
-        setError("An error occurred");
+        toast.error("An error occurred");
       }
     } finally {
       setLoading(false);
@@ -127,18 +128,23 @@ export default function BusinessLoginPage() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="focus:ring-[#4BB8FA] focus:border-[#4BB8FA] block w-full pl-10 sm:text-sm border-[#C4E2F5] rounded-xl py-3 bg-white border outline-none transition-colors text-gray-900"
+                    className="focus:ring-[#4BB8FA] focus:border-[#4BB8FA] block w-full pl-10 pr-12 sm:text-sm border-[#C4E2F5] rounded-xl py-3 bg-white border outline-none transition-colors text-gray-900"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
             )}
-
-            {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
             <div>
               <button
@@ -156,7 +162,6 @@ export default function BusinessLoginPage() {
                 type="button"
                 onClick={() => {
                   setLoginMethod(loginMethod === "password" ? "email" : "password");
-                  setError("");
                 }}
                 className="text-sm font-bold text-[#4BB8FA] hover:text-[#1591DC] transition-colors"
               >

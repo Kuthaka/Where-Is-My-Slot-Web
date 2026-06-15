@@ -10,6 +10,7 @@ import { VerifyOtpUseCase } from './application/use-cases/verify-otp.use-case';
 import { LoginBusinessUseCase } from './application/use-cases/login-business.use-case';
 import { SignupBusinessUseCase } from './application/use-cases/signup-business.use-case';
 import { SetPasswordUseCase } from './application/use-cases/set-password.use-case';
+import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
 import { OTP_REPOSITORY } from './domain/repositories/otp.repository.interface';
 import { PrismaOtpRepository } from './infrastructure/repositories/prisma-otp.repository';
 import { UsersModule } from '../users/users.module';
@@ -53,6 +54,7 @@ import { PrismaService } from '../../shared/database/prisma.service';
     LoginBusinessUseCase,
     SignupBusinessUseCase,
     SetPasswordUseCase,
+    RegisterUserUseCase,
     {
       provide: OTP_REPOSITORY,
       useClass: PrismaOtpRepository,

@@ -19,11 +19,18 @@ export class PrismaUserRepository implements IUserRepository {
     return this.mapToDomain(user);
   }
 
+  async findByUsername(username: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({ where: { username } });
+    if (!user) return null;
+    return this.mapToDomain(user);
+  }
+
   async create(user: User): Promise<User> {
     const created = await this.prisma.user.create({
       data: {
         id: user.id,
         name: user.name,
+        username: user.username,
         email: user.email,
         password: user.passwordHash,
         isPasswordSet: user.isPasswordSet,
@@ -39,6 +46,7 @@ export class PrismaUserRepository implements IUserRepository {
       where: { id },
       data: {
         name: data.name,
+        username: data.username,
         email: data.email,
         password: data.passwordHash,
         isPasswordSet: data.isPasswordSet,
@@ -53,6 +61,7 @@ export class PrismaUserRepository implements IUserRepository {
     return new User(
       prismaUser.id,
       prismaUser.name,
+      prismaUser.username,
       prismaUser.email,
       prismaUser.password,
       prismaUser.isPasswordSet,

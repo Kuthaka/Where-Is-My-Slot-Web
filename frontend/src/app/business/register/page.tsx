@@ -3,16 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Store, Mail, ArrowRight } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function BusinessRegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       // Mocking OTP verification for smooth testing
@@ -26,10 +25,10 @@ export default function BusinessRegisterPage() {
       const data = await res.json();
       localStorage.setItem("token", data.data?.accessToken || data.accessToken);
       document.cookie = `token=${data.data?.accessToken || data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
-
+      toast.success("Authentication successful");
       router.push("/business/register/onboarding");
     } catch (err: any) {
-      setError(err.message || "An error occurred");
+      toast.error(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -79,8 +78,6 @@ export default function BusinessRegisterPage() {
                 />
               </div>
             </div>
-
-            {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
             <div>
               <button

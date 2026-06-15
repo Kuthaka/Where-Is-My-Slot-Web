@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { User, Mail, Phone, Edit2, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function UserProfilePage() {
   const router = useRouter();
@@ -17,23 +18,39 @@ export default function UserProfilePage() {
       return;
     }
 
-    // Dummy fetch user data - Replace with actual API call
-    setTimeout(() => {
-      setUser({
-        firstName: "Elviz",
-        lastName: "Dizzouza",
-        email: "elviz@example.com",
-        phone: "+1 (555) 123-4567",
-        avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop"
-      });
+    fetch("http://localhost:5000/api/v1/auth/me", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const userData = data.data || data;
+      if (userData && userData.name) {
+        setUser({
+          name: userData.name,
+          username: userData.username,
+          email: userData.email,
+          avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop"
+        });
+      } else {
+        router.push("/login");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      router.push("/login");
+    })
+    .finally(() => {
       setLoading(false);
-    }, 500);
+    });
 
   }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    toast.success("Successfully logged out");
     router.push("/login");
   };
 
@@ -62,9 +79,11 @@ export default function UserProfilePage() {
                 
                 <div className="flex-1 text-center md:text-left">
                   <h1 className="text-3xl font-black text-gray-900 dark:text-white">
-                    {user.firstName} {user.lastName}
+                    {user.name}
                   </h1>
-                  <p className="text-gray-500 font-medium mt-1">Free User</p>
+                  <p className="text-gray-500 font-medium mt-1">
+                    {user.username ? `@${user.username}` : "Free User"}
+                  </p>
                 </div>
 
                 <button onClick={handleLogout} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-red-50 text-red-500 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 font-bold transition-colors">
@@ -84,10 +103,10 @@ export default function UserProfilePage() {
                 
                 <div className="bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
                   <div className="flex items-center gap-3 text-gray-500 mb-2">
-                    <Phone size={18} />
-                    <span className="text-sm font-bold">Phone Number</span>
+                    <User size={18} />
+                    <span className="text-sm font-bold">Username</span>
                   </div>
-                  <p className="text-gray-900 dark:text-white font-medium">{user.phone || "Not provided"}</p>
+                  <p className="text-gray-900 dark:text-white font-medium">{user.username ? `@${user.username}` : "Not provided"}</p>
                 </div>
               </div>
             </div>
