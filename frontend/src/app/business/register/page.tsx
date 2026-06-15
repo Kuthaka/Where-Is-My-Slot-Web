@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Store, Mail, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { toast } from "react-hot-toast";
 
 export default function BusinessRegisterPage() {
@@ -88,6 +89,12 @@ export default function BusinessRegisterPage() {
                 {loading ? "Authenticating..." : "Continue"}
                 {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
               </button>
+            </div>
+            
+            <div className="text-center mt-4">
+              <Link href="/business/login" className="text-sm font-bold text-[#4BB8FA] hover:text-[#1591DC] transition-colors">
+                Already have an account? Log in here.
+              </Link>
             </div>
           </form>
         </div>

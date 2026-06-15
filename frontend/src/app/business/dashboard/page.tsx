@@ -41,8 +41,7 @@ export default function MerchantDashboardPage() {
           if (extractedBusiness) {
             setBusiness(extractedBusiness);
           } else {
-            router.push("/business/register/onboarding");
-            return;
+            setBusiness(null);
           }
         }
       } catch (err) {
@@ -153,7 +152,21 @@ export default function MerchantDashboardPage() {
         </header>
 
         <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
-          {activeTab === "overview" && (
+          {!business ? (
+            <div className="bg-white p-10 rounded-3xl border border-gray-100 shadow-sm text-center flex flex-col items-center justify-center min-h-[400px]">
+              <div className="bg-purple-100 p-4 rounded-full text-purple-600 mb-6">
+                <Store size={48} />
+              </div>
+              <h2 className="text-2xl font-black text-gray-900 mb-2">You haven&apos;t listed a business yet!</h2>
+              <p className="text-gray-500 mb-8 max-w-md">Get started by creating your business profile to manage bookings, create offers, and track your performance.</p>
+              <button 
+                onClick={() => router.push("/business/register/onboarding")}
+                className="px-8 py-3 bg-purple-600 hover:bg-purple-700 transition-colors text-white rounded-xl font-bold flex items-center gap-2"
+              >
+                List Your Business Now
+              </button>
+            </div>
+          ) : activeTab === "overview" && (
             <>
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -201,7 +214,7 @@ export default function MerchantDashboardPage() {
             </>
           )}
 
-          {activeTab === "security" && (
+          {business && activeTab === "security" && (
             <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm max-w-2xl">
               <h3 className="text-xl font-extrabold text-gray-900 mb-2">
                 {user?.isPasswordSet ? "Change Password" : "Set Password"}
