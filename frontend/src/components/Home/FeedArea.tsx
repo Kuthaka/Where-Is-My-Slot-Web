@@ -1,10 +1,158 @@
 "use client";
 
-import { useState } from "react";
-import { Zap, ChevronRight, X, CheckCircle2, Store, MapPin, Heart, MessageCircle, Share2, Send } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Zap, ChevronRight, X, CheckCircle2, Store, MapPin, Heart, MessageCircle, Share2, Send, Trash2 } from "lucide-react";
 
 export default function FeedArea() {
   const [activeFlashIndex, setActiveFlashIndex] = useState<number | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
+  const [activeComments, setActiveComments] = useState<{ [key: string]: any[] }>({});
+  const [user, setUser] = useState<any>(null);
+
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("http://localhost:5000/api/v1/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.data || data);
+        }
+      } catch (err) {}
+    };
+    fetchUser();
+  }, []);
+
+  const fetchPosts = async (cursor?: string) => {
+    if (loading || (!hasMore && cursor)) return;
+    setLoading(true);
+    try {
+      const url = `http://localhost:5000/api/v1/posts?limit=5${cursor ? '&cursor=' + cursor : ''}${user?.id ? '&userId=' + user.id : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if (res.ok) {
+        if (cursor) {
+          setPosts(prev => [...prev, ...data.data.posts]);
+        } else {
+          setPosts(data.data.posts);
+        }
+        setNextCursor(data.data.nextCursor);
+        setHasMore(!!data.data.nextCursor);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, [user?.id]); // Re-fetch if user logs in to get correct like status
+
+  const lastPostElementRef = useCallback((node: any) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        fetchPosts(nextCursor!);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore, nextCursor]);
+
+  const toggleLike = async (postId: string) => {
+    if (!user) {
+      alert("Please login to like posts");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/v1/posts/${postId}/like`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPosts(prev => prev.map(p => {
+          if (p.id === postId) {
+            return {
+              ...p,
+              _count: { ...p._count, likes: data.data.isLiked ? p._count.likes + 1 : p._count.likes - 1 },
+              isLikedByMe: data.data.isLiked
+            };
+          }
+          return p;
+        }));
+      }
+    } catch (err) {}
+  };
+
+  const fetchComments = async (postId: string) => {
+    if (activeComments[postId]) {
+      // Toggle off
+      const newObj = { ...activeComments };
+      delete newObj[postId];
+      setActiveComments(newObj);
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/v1/posts/${postId}/comments`);
+      const data = await res.json();
+      if (res.ok) {
+        setActiveComments(prev => ({ ...prev, [postId]: data.data || data }));
+      }
+    } catch (err) {}
+  };
+
+  const handleCommentSubmit = async (postId: string) => {
+    if (!user) return alert("Please login to comment");
+    const text = commentText[postId]?.trim();
+    if (!text) return;
+    
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/v1/posts/${postId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCommentText(prev => ({ ...prev, [postId]: "" }));
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, _count: { ...p._count, comments: p._count.comments + 1 } } : p));
+        // Add to active comments if open
+        if (activeComments[postId]) {
+          setActiveComments(prev => ({ ...prev, [postId]: [...prev[postId], data.data || data] }));
+        }
+      }
+    } catch (err) {}
+  };
+
+  const deleteComment = async (postId: string, commentId: string) => {
+    if (!confirm("Delete comment?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/v1/posts/comments/${commentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, _count: { ...p._count, comments: Math.max(0, p._count.comments - 1) } } : p));
+        if (activeComments[postId]) {
+          setActiveComments(prev => ({ ...prev, [postId]: prev[postId].filter((c: any) => c.id !== commentId) }));
+        }
+      }
+    } catch (err) {}
+  };
 
   const flashDeals = [
     { id: 1, name: "Social Offline", offer: "Happy Hour 1+1 \uD83C\uDF79", img: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=1200&fit=crop" },
@@ -14,39 +162,6 @@ export default function FeedArea() {
     { id: 5, name: "Third Wave", offer: "BOGO Coffee \u2615", img: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&h=1200&fit=crop" },
     { id: 6, name: "Zudio", offer: "Summer Sale \uD83D\uDC55", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800&h=1200&fit=crop" },
     { id: 7, name: "View All", offer: "More deals", img: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&h=200&fit=crop", storyImg: "", isMore: true }
-  ];
-
-  const posts = [
-    {
-      id: 1,
-      authorName: "George Jose",
-      handle: "@george",
-      time: "1 hour ago",
-      avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop",
-      content: "Lorem ipsum dolor sit amet consectetur. Porttitor.",
-      image: "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800&h=600&fit=crop",
-      verified: true
-    },
-    {
-      id: 2,
-      authorName: "Sarah Connor",
-      handle: "@sarah_c",
-      time: "3 hours ago",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-      content: "Just finished a great UI design session. Exploring some new brutalist concepts for an upcoming project. What do you guys think?",
-      image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop",
-      verified: false
-    },
-    {
-      id: 3,
-      authorName: "Marcus Daily",
-      handle: "@marcus_d",
-      time: "5 hours ago",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-      content: "Coffee and code. The only way to start a Monday morning properly \u2615\uD83D\uDCBB",
-      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=600&fit=crop",
-      verified: true
-    }
   ];
 
   const handleNextFlash = () => {
@@ -100,71 +215,141 @@ export default function FeedArea() {
 
         {/* Post Feed */}
         <div className="space-y-6">
-          {posts.map((post) => (
-            <article key={post.id} className="bg-white dark:bg-[#242424] rounded-[28px] p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+          {posts.map((post, index) => {
+            const isLast = index === posts.length - 1;
+            return (
+            <article 
+              key={post.id} 
+              ref={isLast ? lastPostElementRef : null}
+              className="bg-white dark:bg-[#242424] rounded-[28px] p-5 shadow-sm border border-gray-100 dark:border-gray-800"
+            >
               {/* Post Header */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-2xl overflow-hidden">
-                  <img src={post.avatar} alt={post.authorName} className="w-full h-full object-cover" />
+                <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
+                  {post.business?.logo ? (
+                    <img src={post.business.logo} alt={post.business.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Store size={20} className="text-gray-400" />
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-bold text-gray-500">{post.handle}</span>
-                    {post.verified && <CheckCircle2 size={14} className="text-blue-500 fill-current" />}
+                    <h3 className="font-black text-gray-900 dark:text-white hover:underline cursor-pointer">{post.business?.name}</h3>
+                    {post.business?.isVerified && <CheckCircle2 size={14} className="text-blue-500 fill-current" />}
                   </div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-black text-gray-900 dark:text-white">{post.authorName}</h3>
-                    <span className="text-sm font-bold text-yellow-500">. {post.time}</span>
+                    <span className="text-sm font-bold text-gray-500">@{post.business?.username || post.business?.name.toLowerCase().replace(/\s+/g, '')}</span>
+                    <span className="text-sm font-bold text-gray-400">· {new Date(post.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
 
               {/* Post Content */}
-              <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 font-medium">
-                {post.content}
+              <p className="text-[15px] text-gray-900 dark:text-gray-100 mb-4 font-medium whitespace-pre-wrap leading-relaxed">
+                {post.text}
               </p>
 
               {/* Post Image */}
-              <div className="w-full h-[380px] rounded-3xl overflow-hidden mb-4 relative group">
-                <img src={post.image} alt="Artwork" className="w-full h-full object-cover" />
-              </div>
+              {post.image && (
+                <div className="w-full max-h-[450px] rounded-[24px] overflow-hidden mb-4 relative group border border-gray-100 dark:border-gray-800">
+                  <img src={post.image} alt="Artwork" className="w-full h-full object-cover" />
+                </div>
+              )}
 
               {/* Post Actions */}
-              <div className="flex items-center justify-between mb-5 px-1">
-                <div className="flex items-center gap-4">
-                  <button className="text-gray-500 hover:text-red-500 transition-colors">
-                    <Heart size={22} />
+              <div className="flex items-center justify-between mb-5 px-1 pt-2 border-t border-gray-100 dark:border-gray-800/60 mt-4">
+                <div className="flex items-center gap-6">
+                  <button 
+                    onClick={() => toggleLike(post.id)}
+                    className={`flex items-center gap-1.5 transition-colors group ${post.isLikedByMe ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`}
+                  >
+                    <Heart size={20} fill={post.isLikedByMe ? "currentColor" : "none"} />
+                    <span className="text-sm font-bold">{post._count?.likes || 0}</span>
                   </button>
-                  <button className="text-gray-500 hover:text-blue-500 transition-colors">
-                    <MessageCircle size={22} />
+                  <button 
+                    onClick={() => fetchComments(post.id)}
+                    className={`flex items-center gap-1.5 transition-colors group ${activeComments[post.id] ? 'text-blue-500' : 'text-gray-500 hover:text-blue-500'}`}
+                  >
+                    <MessageCircle size={20} fill={activeComments[post.id] ? "currentColor" : "none"} className={activeComments[post.id] ? 'text-blue-500' : ''} />
+                    <span className="text-sm font-bold">{post._count?.comments || 0}</span>
                   </button>
-                  <button className="text-gray-500 hover:text-green-500 transition-colors">
-                    <Share2 size={22} />
+                  <button className="text-gray-500 hover:text-green-500 transition-colors flex items-center gap-1.5 group">
+                    <Share2 size={20} />
                   </button>
                 </div>
-                <button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-2 rounded-xl transition-colors">
-                  Save
-                </button>
               </div>
 
-              {/* Comment Input */}
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0 opacity-80">
-                  <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="Me" className="w-full h-full object-cover" />
+              {/* Comments Section */}
+              {activeComments[post.id] && (
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-4">
+                  <div className="max-h-60 overflow-y-auto space-y-3 no-scrollbar">
+                    {activeComments[post.id].length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-2 font-bold">No comments yet. Be the first!</p>
+                    ) : (
+                      activeComments[post.id].map((comment: any) => (
+                        <div key={comment.id} className="flex gap-3 items-start group/comment">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0 overflow-hidden">
+                            <span className="w-full h-full flex items-center justify-center text-xs font-black text-gray-500">{comment.user.name.charAt(0)}</span>
+                          </div>
+                          <div className="flex-1 bg-gray-50 dark:bg-[#1a1a1a] rounded-2xl px-4 py-2 relative">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-gray-900 dark:text-white">{comment.user.name}</span>
+                              <span className="text-[10px] text-gray-400 font-bold">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">{comment.text}</p>
+                            
+                            {user?.id === comment.userId && (
+                              <button 
+                                onClick={() => deleteComment(post.id, comment.id)}
+                                className="absolute top-2 right-2 text-red-400 hover:text-red-600 hidden group-hover/comment:block transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  
+                  {/* Comment Input */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <div className="w-9 h-9 rounded-full bg-yellow-400 shrink-0 flex items-center justify-center text-black font-black">
+                      {user ? user.name.charAt(0) : '?'}
+                    </div>
+                    <div className="flex-1 relative">
+                      <input 
+                        type="text" 
+                        value={commentText[post.id] || ''}
+                        onChange={(e) => setCommentText(prev => ({ ...prev, [post.id]: e.target.value }))}
+                        onKeyDown={(e) => e.key === 'Enter' && handleCommentSubmit(post.id)}
+                        placeholder="Write a comment..." 
+                        className="w-full bg-gray-50 dark:bg-[#1a1a1a] rounded-full py-2.5 pl-4 pr-10 text-sm focus:outline-none border border-gray-200 dark:border-gray-800 focus:border-yellow-400 transition-colors text-gray-900 dark:text-white"
+                      />
+                      <button 
+                        onClick={() => handleCommentSubmit(post.id)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-yellow-500 hover:text-yellow-600 transition-colors"
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 relative">
-                  <input 
-                    type="text" 
-                    placeholder="Write your comment.." 
-                    className="w-full bg-gray-50 dark:bg-[#1a1a1a] rounded-xl py-2.5 pl-4 pr-10 text-sm focus:outline-none border border-transparent dark:border-gray-800"
-                  />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors">
-                    <Send size={16} />
-                  </button>
-                </div>
-              </div>
+              )}
+
             </article>
-          ))}
+            );
+          })}
+          
+          {loading && (
+            <div className="flex justify-center py-6">
+              <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+          {!hasMore && posts.length > 0 && (
+            <div className="text-center py-6 text-gray-400 font-bold text-sm">You've reached the end!</div>
+          )}
+          
           <div className="h-40"></div>
         </div>
       </section>

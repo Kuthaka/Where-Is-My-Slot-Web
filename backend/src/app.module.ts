@@ -10,6 +10,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { OffersModule } from './modules/offers/offers.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { PostsModule } from './modules/posts/posts.module';
 // Add feature modules here later
 
 @Module({
@@ -23,6 +24,7 @@ import { AdminModule } from './modules/admin/admin.module';
     OffersModule,
     NotificationsModule,
     AdminModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

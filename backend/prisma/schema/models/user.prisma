@@ -17,4 +17,6 @@ model User {
   updatedAt DateTime @updatedAt
 
   businesses Business[]
+  likes      Like[]
+  comments   Comment[]
 }

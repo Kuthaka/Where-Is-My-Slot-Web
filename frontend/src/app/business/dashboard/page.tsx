@@ -169,7 +169,7 @@ export default function MerchantDashboardPage() {
             </div>
           ) : (
             <>
-              {activeTab === "overview" && <OverviewTab business={business} />}
+              {activeTab === "overview" && <OverviewTab business={business} user={user} />}
               {activeTab === "profile" && <ProfileTab business={business} />}
               {activeTab === "parking" && <ParkingTab business={business} />}
               {activeTab === "posts" && <PostsTab business={business} />}

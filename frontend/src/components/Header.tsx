@@ -13,17 +13,30 @@ import { toast } from "react-hot-toast";
 export default function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-    }
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("http://localhost:5000/api/v1/auth/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.data || data);
+        } else {
+          // Token invalid, clear it
+          localStorage.removeItem("token");
+        }
+      } catch (err) {}
+    };
+    fetchUser();
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -37,7 +50,7 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    setIsLoggedIn(false);
+    setUser(null);
     setDropdownOpen(false);
     toast.success("Successfully logged out");
     router.push("/login");
@@ -99,7 +112,7 @@ export default function Header() {
           </button>
 
           {mounted && (
-            isLoggedIn ? (
+            user ? (
               <div className="relative" ref={dropdownRef}>
                 <div 
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -111,12 +124,12 @@ export default function Header() {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#242424] border border-gray-100 dark:border-gray-800 rounded-2xl shadow-lg py-2 z-50 overflow-hidden">
                     <Link 
-                      href="/profile" 
+                      href={user.role === 'BUSINESS' ? "/business/dashboard" : "/profile"} 
                       onClick={() => setDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors"
                     >
                       <User size={16} />
-                      My Profile
+                      {user.role === 'BUSINESS' ? 'Business Dashboard' : 'My Profile'}
                     </Link>
                     <button 
                       onClick={handleLogout}

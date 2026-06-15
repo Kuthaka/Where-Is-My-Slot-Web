@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export default function LeftSidebar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [userData, setUserData] = useState<{name: string, username: string | null} | null>(null);
+  const [userData, setUserData] = useState<{name: string, username: string | null, role: string} | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -55,8 +55,11 @@ export default function LeftSidebar() {
             <p className="text-sm text-gray-500 mb-6">
               {userData?.username ? `@${userData.username}` : (userData ? "@user" : "...")}
             </p>
-            <Link href="/profile" className="block w-full py-3 rounded-xl bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors font-bold text-sm text-gray-800 dark:text-gray-200 shadow-inner">
-              My Profile
+            <Link 
+              href={userData?.role === 'BUSINESS' ? "/business/dashboard" : "/profile"} 
+              className="block w-full py-3 rounded-xl bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors font-bold text-sm text-gray-800 dark:text-gray-200 shadow-inner"
+            >
+              {userData?.role === 'BUSINESS' ? "Business Dashboard" : "My Profile"}
             </Link>
           </div>
         </div>
@@ -81,13 +84,16 @@ export default function LeftSidebar() {
       )}
 
       {/* List Your Business CTA */}
-      <div className="px-2">
-        <Link href="/business/register" className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-yellow-950 font-black shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] group relative overflow-hidden">
-          <Store className="group-hover:scale-110 transition-transform" />
-          List your business
-          <span className="absolute top-0 right-0 bg-white text-yellow-600 text-[10px] font-extrabold px-2 py-1 rounded-bl-xl">FREE</span>
-        </Link>
-      </div>
+      {/* List Your Business CTA (Only show if not already a business) */}
+      {userData?.role !== 'BUSINESS' && (
+        <div className="px-2">
+          <Link href="/business/register" className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-yellow-950 font-black shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] group relative overflow-hidden">
+            <Store className="group-hover:scale-110 transition-transform" />
+            List your business
+            <span className="absolute top-0 right-0 bg-white text-yellow-600 text-[10px] font-extrabold px-2 py-1 rounded-bl-xl">FREE</span>
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }
