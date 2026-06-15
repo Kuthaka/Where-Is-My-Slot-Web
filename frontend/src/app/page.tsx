@@ -6,7 +6,7 @@ import {
   Home, User, MessageCircle, Settings, 
   Moon, Sun, Search, Heart, Share2, 
   Bookmark, Send, CheckCircle2, ChevronRight,
-  X, MapPin, Store, Zap
+  X, MapPin, Store, Zap, Compass, Car
 } from "lucide-react";
 
 export default function AppLandingPage() {
@@ -64,36 +64,42 @@ export default function AppLandingPage() {
           </div>
 
           {/* Navigation Icons */}
-          <div className="flex items-center justify-center gap-6 flex-1">
+          <div className="flex items-center justify-center gap-8 flex-1">
             <button className="text-yellow-400 flex flex-col items-center gap-1 group">
               <Home size={24} className="fill-current" />
               <div className="w-1 h-1 rounded-full bg-yellow-400"></div>
             </button>
-            <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-              <User size={24} />
+            <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Explore">
+              <Compass size={24} />
             </button>
-            <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-              <MessageCircle size={24} />
+            <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Parking">
+              <Car size={24} />
             </button>
-            <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-              <Settings size={24} />
+            <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Saved">
+              <Bookmark size={24} />
             </button>
+          </div>
+
+          {/* User Actions & Avatar */}
+          <div className="flex items-center justify-end flex-1 gap-4">
             
             {/* Theme Switcher */}
             {mounted && (
               <button 
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="ml-4 p-2 rounded-full bg-gray-100 dark:bg-[#1a1a1a] text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all border border-transparent dark:border-gray-800"
+                className="p-2 rounded-full bg-gray-100 dark:bg-[#1a1a1a] text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all border border-transparent dark:border-gray-800"
                 aria-label="Toggle theme"
               >
                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
             )}
-          </div>
 
-          {/* User Avatar */}
-          <div className="flex items-center justify-end flex-1">
-            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-800 cursor-pointer">
+            <button className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-[#1a1a1a] hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors border border-transparent dark:border-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300">
+              <MapPin size={16} className="text-yellow-500" />
+              <span className="truncate max-w-[120px]">Set Location</span>
+            </button>
+
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-800 cursor-pointer hover:border-yellow-400 transition-colors shrink-0">
               <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="Profile" className="w-full h-full object-cover" />
             </div>
           </div>
