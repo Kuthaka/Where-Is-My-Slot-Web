@@ -23,8 +23,10 @@ export class LoginBusinessUseCase {
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role };
+    const { passwordHash, ...safeUser } = user as any;
     return {
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
+      user: safeUser,
     };
   }
 }

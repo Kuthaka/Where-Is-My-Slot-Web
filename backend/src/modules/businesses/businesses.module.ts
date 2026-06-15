@@ -7,6 +7,7 @@ import { CloudinaryImageProvider } from './infrastructure/providers/cloudinary.p
 import { OnboardBusinessUseCase } from './application/use-cases/onboard-business.use-case';
 import { UploadImageUseCase } from './application/use-cases/upload-image.use-case';
 import { PrismaService } from '../../shared/database/prisma.service';
+import { AdminManageBusinessUseCase } from './application/use-cases/admin-manage-business.use-case';
 
 @Module({
   controllers: [BusinessesController],
@@ -14,6 +15,7 @@ import { PrismaService } from '../../shared/database/prisma.service';
     PrismaService,
     OnboardBusinessUseCase,
     UploadImageUseCase,
+    AdminManageBusinessUseCase,
     {
       provide: BUSINESS_REPOSITORY,
       useClass: PrismaBusinessRepository,

@@ -1,19 +1,47 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { IBusinessRepository, BUSINESS_REPOSITORY } from '../../domain/repositories/business.repository.interface';
 import { Business } from '../../domain/entities/business.entity';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
-export class OnboardBusinessUseCase {
+export class AdminManageBusinessUseCase {
   constructor(
     @Inject(BUSINESS_REPOSITORY)
     private readonly businessRepository: IBusinessRepository,
   ) {}
 
-  async execute(data: any): Promise<Business> {
+  async getAllBusinesses(): Promise<Business[]> {
+    return this.businessRepository.findAll();
+  }
+
+  async approveBusiness(id: string): Promise<Business> {
+    const business = await this.businessRepository.findById(id);
+    if (!business) {
+      throw new NotFoundException('Business not found');
+    }
+    
+    business.props.status = 'APPROVED';
+    business.props.isVerified = true;
+    
+    return this.businessRepository.update(id, business);
+  }
+
+  async rejectBusiness(id: string): Promise<Business> {
+    const business = await this.businessRepository.findById(id);
+    if (!business) {
+      throw new NotFoundException('Business not found');
+    }
+    
+    business.props.status = 'REJECTED';
+    business.props.isVerified = false;
+    
+    return this.businessRepository.update(id, business);
+  }
+
+  async createAdminBusiness(data: any): Promise<Business> {
     const business = new Business({
       id: uuidv4(),
-      ownerId: data.ownerId || null,
+      ownerId: data.ownerId || null, // Can be null for unclaimed
       name: data.name,
       username: data.username || null,
       tagline: data.tagline || null,
@@ -49,8 +77,8 @@ export class OnboardBusinessUseCase {
       coverPhoto: data.coverPhoto || null,
       images: data.images || [],
       socialLinks: data.socialLinks || null,
-      isVerified: false,
-      status: 'PENDING',
+      isVerified: true, // Auto-verified if admin creates it
+      status: 'APPROVED',
       createdAt: new Date(),
       updatedAt: new Date(),
     });

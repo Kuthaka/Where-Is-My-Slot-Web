@@ -4,6 +4,7 @@ export class User {
     public name: string,
     public email: string,
     public passwordHash: string,
+    public isPasswordSet: boolean,
     public role: string,
     public isActive: boolean,
     public createdAt: Date,

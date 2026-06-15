@@ -24,6 +24,7 @@ export class SignupBusinessUseCase {
       data.name,
       data.email,
       passwordHash,
+      true,
       'BUSINESS',
       true,
       new Date(),

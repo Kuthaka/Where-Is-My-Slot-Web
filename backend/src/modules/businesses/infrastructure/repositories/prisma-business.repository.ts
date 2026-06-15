@@ -18,64 +18,75 @@ export class PrismaBusinessRepository implements IBusinessRepository {
     return businesses.map(b => this.mapToDomain(b));
   }
 
+  async findAll(): Promise<Business[]> {
+    const businesses = await this.prisma.business.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return businesses.map(b => this.mapToDomain(b));
+  }
+
   async create(business: Business): Promise<Business> {
     const created = await this.prisma.business.create({
       data: {
-        id: business.id,
-        ownerId: business.ownerId,
-        name: business.name,
-        description: business.description,
-        email: business.email,
-        phone: business.phone,
-        address: business.address,
-        latitude: business.latitude,
-        longitude: business.longitude,
-        timings: business.timings,
-        parking: business.parking,
-        images: business.images,
-        isVerified: business.isVerified,
+        ...business.props
       },
     });
     return this.mapToDomain(created);
   }
 
   async update(id: string, data: Partial<Business>): Promise<Business> {
+    // We only update the props that are passed
+    const updateData = data.props ? { ...data.props } : {};
     const updated = await this.prisma.business.update({
       where: { id },
-      data: {
-        name: data.name,
-        description: data.description,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        timings: data.timings,
-        parking: data.parking,
-        images: data.images,
-        isVerified: data.isVerified,
-      },
+      data: updateData,
     });
     return this.mapToDomain(updated);
   }
 
   private mapToDomain(prismaBusiness: any): Business {
-    return new Business(
-      prismaBusiness.id,
-      prismaBusiness.ownerId,
-      prismaBusiness.name,
-      prismaBusiness.description,
-      prismaBusiness.email,
-      prismaBusiness.phone,
-      prismaBusiness.address,
-      prismaBusiness.latitude,
-      prismaBusiness.longitude,
-      prismaBusiness.timings,
-      prismaBusiness.parking,
-      prismaBusiness.images,
-      prismaBusiness.isVerified,
-      prismaBusiness.createdAt,
-      prismaBusiness.updatedAt,
-    );
+    return new Business({
+      id: prismaBusiness.id,
+      ownerId: prismaBusiness.ownerId,
+      name: prismaBusiness.name,
+      username: prismaBusiness.username,
+      tagline: prismaBusiness.tagline,
+      description: prismaBusiness.description,
+      establishedYear: prismaBusiness.establishedYear,
+      gstNumber: prismaBusiness.gstNumber,
+      contactPerson: prismaBusiness.contactPerson,
+      phone: prismaBusiness.phone,
+      email: prismaBusiness.email,
+      websiteUrl: prismaBusiness.websiteUrl,
+      whatsappNumber: prismaBusiness.whatsappNumber,
+      mobileNumbers: prismaBusiness.mobileNumbers,
+      landlineNumbers: prismaBusiness.landlineNumbers,
+      emails: prismaBusiness.emails,
+      address: prismaBusiness.address,
+      pincode: prismaBusiness.pincode,
+      plotNo: prismaBusiness.plotNo,
+      buildingName: prismaBusiness.buildingName,
+      streetName: prismaBusiness.streetName,
+      landmark: prismaBusiness.landmark,
+      area: prismaBusiness.area,
+      city: prismaBusiness.city,
+      state: prismaBusiness.state,
+      latitude: prismaBusiness.latitude,
+      longitude: prismaBusiness.longitude,
+      googleMapsUrl: prismaBusiness.googleMapsUrl,
+      timings: prismaBusiness.timings,
+      primaryCategory: prismaBusiness.primaryCategory,
+      subCategories: prismaBusiness.subCategories,
+      amenities: prismaBusiness.amenities,
+      parking: prismaBusiness.parking,
+      logo: prismaBusiness.logo,
+      coverPhoto: prismaBusiness.coverPhoto,
+      images: prismaBusiness.images,
+      socialLinks: prismaBusiness.socialLinks,
+      isVerified: prismaBusiness.isVerified,
+      status: prismaBusiness.status,
+      createdAt: prismaBusiness.createdAt,
+      updatedAt: prismaBusiness.updatedAt,
+    });
   }
 }
