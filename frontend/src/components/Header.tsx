@@ -48,9 +48,9 @@ export default function Header() {
       <div className="max-w-[1440px] mx-auto w-full h-full flex items-center justify-between px-4 lg:px-8">
         <div className="flex items-center gap-6 flex-1">
           {/* Logo Placeholder */}
-          <div className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0 shadow-lg cursor-pointer">
+          <Link href="/" className="w-10 h-10 bg-black dark:bg-white rounded-xl flex items-center justify-center shrink-0 shadow-lg cursor-pointer transition-transform hover:scale-105">
             <div className="w-5 h-5 bg-white dark:bg-black rounded-bl-xl rounded-tr-xl"></div>
-          </div>
+          </Link>
           
           {/* Search */}
           <div className="relative w-full max-w-sm hidden md:block">
