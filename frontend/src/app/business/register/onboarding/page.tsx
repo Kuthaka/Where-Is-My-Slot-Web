@@ -69,7 +69,7 @@ export default function BusinessOnboarding() {
         throw new Error(errorData.message?.message || errorData.message || "Failed to onboard");
       }
 
-      router.push("/list-business/success");
+      router.push("/business/register/success");
     } catch (error: unknown) {
       if (error instanceof Error) {
         alert(`Error: ${error.message}`);
@@ -98,7 +98,7 @@ export default function BusinessOnboarding() {
 
       if (!res.ok) throw new Error("Failed to upload image");
       const data = await res.json();
-      
+
       setFormData((prev) => ({
         ...prev,
         images: [...prev.images, data.data.url],
@@ -114,13 +114,13 @@ export default function BusinessOnboarding() {
     { id: 1, title: "Basics", icon: Building2 },
     { id: 2, title: "Location", icon: MapPin },
     { id: 3, title: "Details & Parking", icon: Car },
-    { id: 4, title: "Media", icon: UploadCloud }
+    { id: 4, title: "Media", icon: UploadCloud },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-8">
       <div className="max-w-4xl w-full bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col md:flex-row">
-        
+
         {/* Sidebar Steps */}
         <div className="w-full md:w-1/3 bg-[#2C5EAD] p-8 text-white flex flex-col justify-between">
           <div>
@@ -128,13 +128,13 @@ export default function BusinessOnboarding() {
               <h2 className="text-3xl font-black mb-2">Partner with us</h2>
               <p className="text-[#C4E2F5] text-sm">Create your business profile in 4 simple steps.</p>
             </div>
-            
+
             <div className="space-y-6">
               {steps.map((step) => {
                 const Icon = step.icon;
                 const isActive = currentStep === step.id;
                 const isPassed = currentStep > step.id;
-                
+
                 return (
                   <div key={step.id} className={`flex items-center gap-4 ${isActive ? "opacity-100" : isPassed ? "opacity-70" : "opacity-40"}`}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
@@ -151,7 +151,7 @@ export default function BusinessOnboarding() {
               })}
             </div>
           </div>
-          
+
           <div className="hidden md:block mt-12 bg-white/10 p-6 rounded-2xl">
             <h4 className="font-bold mb-2">Need Help?</h4>
             <p className="text-sm text-[#C4E2F5]">Contact our merchant support team at support@localplatform.com</p>
@@ -226,20 +226,20 @@ export default function BusinessOnboarding() {
             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
               <h3 className="text-2xl font-black text-gray-900 mb-6">Details & Parking Configuration</h3>
               <div className="space-y-8">
-                
+
                 {/* Parking Section */}
                 <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Car size={20} /></div>
                     <h4 className="font-bold text-gray-900 text-lg">Smart Parking Discovery</h4>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <label className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 transition-colors">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={formData.parking.available}
-                        onChange={(e) => setFormData({...formData, parking: {...formData.parking, available: e.target.checked}})}
+                        onChange={(e) => setFormData({ ...formData, parking: { ...formData.parking, available: e.target.checked } })}
                         className="w-5 h-5 text-blue-600 rounded"
                       />
                       <span className="font-bold text-gray-700">We provide parking for customers</span>
@@ -249,20 +249,20 @@ export default function BusinessOnboarding() {
                       <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                         <div>
                           <label className="block text-sm font-bold text-gray-700 mb-1">Available Slots</label>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             min="0"
                             value={formData.parking.slots}
-                            onChange={(e) => setFormData({...formData, parking: {...formData.parking, slots: parseInt(e.target.value) || 0}})}
-                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            onChange={(e) => setFormData({ ...formData, parking: { ...formData.parking, slots: parseInt(e.target.value) || 0 } })}
+                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                         <div className="flex items-end pb-3">
                           <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
+                            <input
+                              type="checkbox"
                               checked={formData.parking.valet}
-                              onChange={(e) => setFormData({...formData, parking: {...formData.parking, valet: e.target.checked}})}
+                              onChange={(e) => setFormData({ ...formData, parking: { ...formData.parking, valet: e.target.checked } })}
                               className="w-4 h-4 text-blue-600 rounded"
                             />
                             <span className="text-sm font-bold text-gray-700">Valet Parking Available</span>
@@ -275,20 +275,20 @@ export default function BusinessOnboarding() {
 
                 {/* Amenities */}
                 <div>
-                  <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Clock size={18} className="text-gray-400"/> Operating Amenities</h4>
+                  <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Clock size={18} className="text-gray-400" /> Operating Amenities</h4>
                   <div className="flex flex-wrap gap-2">
-                    {["WiFi", "Air Conditioning", "Wheelchair Accessible", "Card Payment", "Pet Friendly"].map(amenity => {
+                    {["WiFi", "Air Conditioning", "Wheelchair Accessible", "Card Payment", "Pet Friendly"].map((amenity) => {
                       const isSelected = formData.amenities.includes(amenity);
                       return (
                         <button
                           key={amenity}
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({
+                            setFormData((prev) => ({
                               ...prev,
-                              amenities: isSelected 
-                                ? prev.amenities.filter(a => a !== amenity)
-                                : [...prev.amenities, amenity]
+                              amenities: isSelected
+                                ? prev.amenities.filter((a) => a !== amenity)
+                                : [...prev.amenities, amenity],
                             }));
                           }}
                           className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${isSelected ? "bg-[#2C5EAD] text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
@@ -308,7 +308,7 @@ export default function BusinessOnboarding() {
             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
               <h3 className="text-2xl font-black text-gray-900 mb-6">Upload Media</h3>
               <p className="text-gray-500 mb-6">Upload photos of your storefront, menu, products, or interior to attract more customers.</p>
-              
+
               <div className="border-2 border-dashed border-[#C4E2F5] bg-[#F5FAFF] rounded-2xl p-10 flex flex-col items-center justify-center text-center">
                 <div className="bg-white p-4 rounded-full shadow-sm mb-4">
                   <UploadCloud size={32} className="text-[#1591DC]" />
@@ -323,8 +323,8 @@ export default function BusinessOnboarding() {
                   onChange={handleImageUpload}
                   disabled={loading}
                 />
-                <label 
-                  htmlFor="imageUpload" 
+                <label
+                  htmlFor="imageUpload"
                   className="bg-[#2C5EAD] hover:bg-[#1a3d74] text-white px-6 py-3 rounded-xl font-bold cursor-pointer transition-colors shadow-md disabled:opacity-50"
                 >
                   {loading ? "Uploading..." : "Browse Files"}
@@ -341,7 +341,7 @@ export default function BusinessOnboarding() {
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <button
                             type="button"
-                            onClick={() => setFormData(prev => ({...prev, images: prev.images.filter((_, i) => i !== idx)}))}
+                            onClick={() => setFormData((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }))}
                             className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-red-600"
                           >
                             Remove
@@ -357,16 +357,16 @@ export default function BusinessOnboarding() {
 
           {/* Navigation */}
           <div className="mt-12 pt-6 border-t border-gray-100 flex items-center justify-between">
-            <button 
+            <button
               onClick={handleBack}
               disabled={currentStep === 1 || loading}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors ${currentStep === 1 ? 'opacity-0 cursor-default' : 'text-gray-600 bg-gray-100 hover:bg-gray-200'}`}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-colors ${currentStep === 1 ? "opacity-0 cursor-default" : "text-gray-600 bg-gray-100 hover:bg-gray-200"}`}
             >
               <ChevronLeft size={18} /> Back
             </button>
-            
+
             {currentStep < 4 ? (
-              <button 
+              <button
                 onClick={handleNext}
                 disabled={loading}
                 className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white bg-[#1591DC] hover:bg-[#0c7abf] shadow-lg shadow-[#1591DC]/30 transition-all"
@@ -374,7 +374,7 @@ export default function BusinessOnboarding() {
                 Continue <ChevronRight size={18} />
               </button>
             ) : (
-              <button 
+              <button
                 onClick={handleSubmit}
                 disabled={loading}
                 className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"

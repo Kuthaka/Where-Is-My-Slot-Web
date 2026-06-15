@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Store, Mail, ArrowRight, KeyRound } from "lucide-react";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function BusinessLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +29,7 @@ export default function LoginPage() {
       }
       localStorage.setItem("token", data.data.accessToken);
       document.cookie = `token=${data.data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
-      router.push("/dashboard");
+      router.push("/business/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -53,12 +53,12 @@ export default function LoginPage() {
         body: JSON.stringify({ email, otp: "000000" }), // Mock OTP
       });
       if (!res.ok) throw new Error("Failed to authenticate");
-      
+
       const data = await res.json();
       localStorage.setItem("token", data.data?.accessToken || data.accessToken);
       document.cookie = `token=${data.data?.accessToken || data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
-      
-      router.push("/dashboard");
+
+      router.push("/business/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -71,13 +71,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex items-center justify-start px-4 sm:px-12 lg:px-24"
       style={{
         backgroundImage: "url('/banner-1.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat"
+        backgroundRepeat: "no-repeat",
       }}
     >
       <div className="w-full max-w-md bg-white/95 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-white/40">
@@ -146,7 +146,7 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#1591DC] hover:bg-[#2C5EAD] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4BB8FA] transition-colors disabled:opacity-50"
               >
-                {loading ? "Processing..." : (loginMethod === "password" ? "Login" : "Instant Login (No OTP)")}
+                {loading ? "Processing..." : loginMethod === "password" ? "Login" : "Instant Login (No OTP)"}
                 {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
               </button>
             </div>
@@ -163,9 +163,9 @@ export default function LoginPage() {
                 {loginMethod === "password" ? "Instant Login (Bypass OTP) instead" : "Login with Password instead"}
               </button>
             </div>
-            
+
             <div className="text-center mt-4">
-              <Link href="/list-business" className="text-sm font-bold text-[#4BB8FA] hover:text-[#1591DC] transition-colors">
+              <Link href="/business/register" className="text-sm font-bold text-[#4BB8FA] hover:text-[#1591DC] transition-colors">
                 Don&apos;t have a business listed? Create one.
               </Link>
             </div>

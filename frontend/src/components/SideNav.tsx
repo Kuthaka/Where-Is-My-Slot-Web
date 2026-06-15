@@ -37,7 +37,7 @@ export default function SideNav() {
             <User size={24} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
             <span className="hidden lg:block text-[15px]">Profile</span>
           </a>
-          <a href="/list-business" className="flex items-center gap-4 px-3 py-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 text-yellow-900 transition-colors group relative mt-2">
+          <a href="/business/register" className="flex items-center gap-4 px-3 py-3 rounded-xl bg-yellow-100 hover:bg-yellow-200 text-yellow-900 transition-colors group relative mt-2">
             <Store size={24} strokeWidth={2} className="group-hover:scale-110 transition-transform text-yellow-700" />
             <span className="hidden lg:flex flex-col">
               <span className="text-[15px] font-bold">List your business</span>

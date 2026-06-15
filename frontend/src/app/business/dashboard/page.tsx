@@ -18,20 +18,20 @@ export default function MerchantDashboardPage() {
     const fetchMe = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        router.push("/login");
+        router.push("/business/login");
         return;
       }
       try {
         const [authRes, busRes] = await Promise.all([
           fetch("http://localhost:5000/api/v1/auth/me", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("http://localhost:5000/api/v1/businesses/me", { headers: { Authorization: `Bearer ${token}` } })
+          fetch("http://localhost:5000/api/v1/businesses/me", { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
         if (authRes.ok) {
           const authData = await authRes.json();
           setUser(authData.data || authData);
         } else {
-          router.push("/login");
+          router.push("/business/login");
           return;
         }
 
@@ -41,12 +41,12 @@ export default function MerchantDashboardPage() {
           if (extractedBusiness) {
             setBusiness(extractedBusiness);
           } else {
-            router.push("/list-business/onboarding");
+            router.push("/business/register/onboarding");
             return;
           }
         }
       } catch (err) {
-        router.push("/login");
+        router.push("/business/login");
       } finally {
         setLoading(false);
       }
@@ -56,7 +56,7 @@ export default function MerchantDashboardPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    router.push("/login");
+    router.push("/business/login");
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -131,20 +131,20 @@ export default function MerchantDashboardPage() {
           </div>
           <span className="font-black text-xl text-gray-900 tracking-tight">Merchant Hub</span>
         </div>
-        
+
         <nav className="flex-1 p-4 space-y-2">
-          <button onClick={() => setActiveTab("overview")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'overview' ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+          <button onClick={() => setActiveTab("overview")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === "overview" ? "bg-purple-50 text-purple-700" : "text-gray-600 hover:bg-gray-50"}`}>
             <LayoutDashboard size={20} />
             Overview
           </button>
-          <button onClick={() => setActiveTab("security")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === 'security' ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+          <button onClick={() => setActiveTab("security")} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${activeTab === "security" ? "bg-purple-50 text-purple-700" : "text-gray-600 hover:bg-gray-50"}`}>
             <Shield size={20} />
             Security
           </button>
         </nav>
 
         <div className="p-4 border-t border-gray-200">
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-bold transition-colors"
           >
@@ -159,9 +159,9 @@ export default function MerchantDashboardPage() {
         <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center sticky top-0 z-10">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900">Welcome back, {user?.name || "Merchant"}!</h1>
-            <p className="text-sm text-gray-500 mt-1">Here is what's happening with your business today.</p>
+            <p className="text-sm text-gray-500 mt-1">Here is what&apos;s happening with your business today.</p>
           </div>
-          <button 
+          <button
             onClick={handleLogout}
             className="md:hidden flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-bold"
           >
@@ -224,8 +224,8 @@ export default function MerchantDashboardPage() {
                 {user?.isPasswordSet ? "Change Password" : "Set Password"}
               </h3>
               <p className="text-sm text-gray-500 mb-6">
-                {user?.isPasswordSet 
-                  ? "Update your password to keep your account secure." 
+                {user?.isPasswordSet
+                  ? "Update your password to keep your account secure."
                   : "Set a password to login with your email instead of using an OTP."}
               </p>
 
@@ -255,7 +255,7 @@ export default function MerchantDashboardPage() {
                 </div>
 
                 {passwordMessage.text && (
-                  <div className={`p-3 rounded-lg text-sm font-bold ${passwordMessage.type === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                  <div className={`p-3 rounded-lg text-sm font-bold ${passwordMessage.type === "error" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
                     {passwordMessage.text}
                   </div>
                 )}
@@ -265,7 +265,7 @@ export default function MerchantDashboardPage() {
                   disabled={passwordLoading}
                   className="w-full bg-purple-600 text-white font-bold py-3 rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50"
                 >
-                  {passwordLoading ? "Saving..." : (user?.isPasswordSet ? "Update Password" : "Set Password")}
+                  {passwordLoading ? "Saving..." : user?.isPasswordSet ? "Update Password" : "Set Password"}
                 </button>
               </form>
             </div>

@@ -13,7 +13,7 @@ export default function BusinessSuccessPage() {
             <Store className="w-4 h-4 text-yellow-900" />
           </div>
         </div>
-        
+
         <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-4">
           Business Created!
         </h2>
@@ -22,14 +22,14 @@ export default function BusinessSuccessPage() {
         </p>
 
         <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8 mx-4 sm:mx-0">
-          <h3 className="font-bold text-gray-900 mb-2">What's next?</h3>
+          <h3 className="font-bold text-gray-900 mb-2">What&apos;s next?</h3>
           <ul className="text-left text-sm text-gray-600 space-y-3 mb-6">
             <li className="flex gap-2"><span className="text-green-500">✓</span> Our team will review your details.</li>
-            <li className="flex gap-2"><span className="text-green-500">✓</span> You'll receive a confirmation email shortly.</li>
+            <li className="flex gap-2"><span className="text-green-500">✓</span> You&apos;ll receive a confirmation email shortly.</li>
             <li className="flex gap-2"><span className="text-green-500">✓</span> You can start adding exclusive offers!</li>
           </ul>
 
-          <Link href="/login" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-[#1591DC]/30 text-sm font-bold text-white bg-[#1591DC] hover:bg-[#2C5EAD] transition-colors group">
+          <Link href="/business/login" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-[#1591DC]/30 text-sm font-bold text-white bg-[#1591DC] hover:bg-[#2C5EAD] transition-colors group">
             Login to Merchant Dashboard
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Link>

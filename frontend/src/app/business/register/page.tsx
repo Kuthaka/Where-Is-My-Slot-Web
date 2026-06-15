@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Store, Mail, ArrowRight } from "lucide-react";
 
-export default function ListBusinessEmailPage() {
+export default function BusinessRegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,12 +22,12 @@ export default function ListBusinessEmailPage() {
         body: JSON.stringify({ email, otp: "000000" }),
       });
       if (!res.ok) throw new Error("Failed to authenticate");
-      
+
       const data = await res.json();
       localStorage.setItem("token", data.data?.accessToken || data.accessToken);
       document.cookie = `token=${data.data?.accessToken || data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
-      
-      router.push("/list-business/onboarding");
+
+      router.push("/business/register/onboarding");
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {
@@ -36,13 +36,13 @@ export default function ListBusinessEmailPage() {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex items-center justify-start px-4 sm:px-12 lg:px-24"
       style={{
         backgroundImage: "url('/banner-1.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
-        backgroundRepeat: "no-repeat"
+        backgroundRepeat: "no-repeat",
       }}
     >
       <div className="w-full max-w-md bg-white/95 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-white/40">
