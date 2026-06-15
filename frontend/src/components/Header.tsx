@@ -1,19 +1,45 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   Home, Moon, Sun, Bookmark, 
-  MapPin, Compass, Car
+  MapPin, Compass, Car, User, LogOut
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    setIsLoggedIn(false);
+    setDropdownOpen(false);
+    router.push("/login");
+  };
 
   return (
     <header className="fixed top-0 w-full h-[72px] bg-white/80 dark:bg-[#242424]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 z-50">
@@ -36,10 +62,10 @@ export default function Header() {
 
         {/* Navigation Icons */}
         <div className="flex items-center justify-center gap-8 flex-1">
-          <button className="text-yellow-400 flex flex-col items-center gap-1 group">
+          <Link href="/" className="text-yellow-400 flex flex-col items-center gap-1 group">
             <Home size={24} className="fill-current" />
             <div className="w-1 h-1 rounded-full bg-yellow-400"></div>
-          </button>
+          </Link>
           <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Explore">
             <Compass size={24} />
           </button>
@@ -52,7 +78,7 @@ export default function Header() {
         </div>
 
         {/* User Actions & Avatar */}
-        <div className="flex items-center justify-end flex-1 gap-4">
+        <div className="flex items-center justify-end flex-1 gap-4 relative">
           
           {/* Theme Switcher */}
           {mounted && (
@@ -70,9 +96,45 @@ export default function Header() {
             <span className="truncate max-w-[120px]">Set Location</span>
           </button>
 
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-800 cursor-pointer hover:border-yellow-400 transition-colors shrink-0">
-            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="Profile" className="w-full h-full object-cover" />
-          </div>
+          {mounted && (
+            isLoggedIn ? (
+              <div className="relative" ref={dropdownRef}>
+                <div 
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-800 cursor-pointer hover:border-yellow-400 transition-colors shrink-0"
+                >
+                  <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="Profile" className="w-full h-full object-cover" />
+                </div>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#242424] border border-gray-100 dark:border-gray-800 rounded-2xl shadow-lg py-2 z-50 overflow-hidden">
+                    <Link 
+                      href="/profile" 
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors"
+                    >
+                      <User size={16} />
+                      My Profile
+                    </Link>
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left"
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link 
+                href="/login" 
+                className="px-6 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 text-black font-bold text-sm transition-colors shadow-sm"
+              >
+                Log In
+              </Link>
+            )
+          )}
         </div>
       </div>
     </header>

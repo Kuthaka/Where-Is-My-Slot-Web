@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, Mail, ArrowRight, KeyRound } from "lucide-react";
 import Link from "next/link";
+import Header from "@/components/Header";
 
 export default function UserLoginPage() {
   const router = useRouter();
@@ -28,7 +29,9 @@ export default function UserLoginPage() {
       }
       localStorage.setItem("token", data.data.accessToken);
       document.cookie = `token=${data.data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
-      router.push("/");
+      
+      // Force hard navigation to reload components that check token on mount
+      window.location.href = "/";
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -41,97 +44,96 @@ export default function UserLoginPage() {
   };
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center px-4"
-      style={{
-        backgroundImage: "url('/banner-1.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-white/40">
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-            <User size={32} />
+    <div className="h-screen w-full bg-[#f0f2f5] dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden transition-colors duration-300">
+      <Header />
+      
+      <main className="flex-1 max-w-[1440px] mx-auto w-full flex items-center justify-center pt-[72px] px-4 h-full overflow-y-auto no-scrollbar pb-8">
+        <div className="w-full max-w-[480px] bg-white dark:bg-[#242424] rounded-[32px] p-8 md:p-10 shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 bg-yellow-400/10 text-yellow-500 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-yellow-400/20">
+              <User size={40} />
+            </div>
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight text-center">
+              Welcome Back
+            </h2>
+            <p className="mt-3 text-center text-sm font-bold text-gray-500 dark:text-gray-400">
+              Sign in to your account to continue.
+            </p>
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight text-center">
-            Welcome Back
-          </h2>
-          <p className="mt-2 text-center text-sm font-medium text-gray-500">
-            Sign in to your account to continue.
-          </p>
-        </div>
 
-        <div className="mt-8">
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-bold text-gray-700">
-                Email address
-              </label>
-              <div className="mt-2 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+          <div className="mt-10">
+            <form className="space-y-6" onSubmit={handleLogin}>
+              <div>
+                <label htmlFor="email" className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+                  Email address
+                </label>
+                <div className="mt-2 relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
+                    placeholder="you@example.com"
+                  />
                 </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-xl py-3 bg-white border outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
-                  placeholder="you@example.com"
-                />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-bold text-gray-700">
-                Password
-              </label>
-              <div className="mt-2 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <KeyRound className="h-5 w-5 text-gray-400" />
+              <div>
+                <label htmlFor="password" className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+                  Password
+                </label>
+                <div className="mt-2 relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <KeyRound className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-900 dark:text-white font-medium"
+                    placeholder="••••••••"
+                  />
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 sm:text-sm border-gray-300 rounded-xl py-3 bg-white border outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900"
-                  placeholder="••••••••"
-                />
               </div>
-            </div>
 
-            {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
+              {error && <p className="text-red-500 text-sm font-bold text-center bg-red-50 dark:bg-red-500/10 py-2 rounded-xl">{error}</p>}
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50"
-              >
-                {loading ? "Signing in..." : "Sign In"}
-                {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
-              </button>
-            </div>
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center py-4 px-4 rounded-2xl text-sm font-black text-black bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-400/20 transition-all disabled:opacity-50 hover:scale-[1.02]"
+                >
+                  {loading ? "Signing in..." : "Sign In"}
+                  {!loading && <ArrowRight className="ml-2 h-5 w-5" />}
+                </button>
+              </div>
 
-            <div className="text-center mt-4 space-y-2">
-              <Link href="/business/login" className="block text-sm font-bold text-[#1591DC] hover:text-[#2C5EAD] transition-colors">
-                Are you a merchant? Login here →
-              </Link>
-              <Link href="/admin/login" className="block text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors">
-                Admin Portal
-              </Link>
-            </div>
-          </form>
+              <div className="text-center mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 space-y-4">
+                <p className="text-sm font-bold text-gray-600 dark:text-gray-400">
+                  Don't have an account?{" "}
+                  <Link href="/register" className="text-yellow-500 hover:text-yellow-600 transition-colors">
+                    Register here
+                  </Link>
+                </p>
+                <Link href="/business/login" className="block text-sm font-bold text-blue-500 hover:text-blue-600 transition-colors">
+                  Are you a merchant? Login here →
+                </Link>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
