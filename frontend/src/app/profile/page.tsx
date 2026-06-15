@@ -1,55 +1,27 @@
 "use client";
 
 import Header from "@/components/Header";
-import { User, Mail, Phone, Edit2, LogOut } from "lucide-react";
-import { useEffect, useState } from "react";
+import { User, Mail, Phone, Edit2, LogOut, Shield, CheckCircle2, AlertCircle } from "lucide-react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store";
+import { logout as reduxLogout } from "@/store/slices/authSlice";
 
 export default function UserProfilePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!loading && !user) {
       router.push("/login");
-      return;
     }
-
-    fetch("http://localhost:5000/api/v1/auth/me", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      const userData = data.data || data;
-      if (userData && userData.name) {
-        setUser({
-          name: userData.name,
-          username: userData.username,
-          email: userData.email,
-          avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop"
-        });
-      } else {
-        router.push("/login");
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      router.push("/login");
-    })
-    .finally(() => {
-      setLoading(false);
-    });
-
-  }, [router]);
+  }, [loading, user, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    dispatch(reduxLogout());
     toast.success("Successfully logged out");
     router.push("/login");
   };
@@ -70,7 +42,7 @@ export default function UserProfilePage() {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative">
                   <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-white dark:border-[#1a1a1a] shadow-lg">
-                    <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={user.avatar || "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop"} alt="Profile" className="w-full h-full object-cover" />
                   </div>
                   <button className="absolute -bottom-2 -right-2 bg-yellow-400 text-black p-2 rounded-xl shadow-md hover:scale-110 transition-transform">
                     <Edit2 size={16} />

@@ -6,7 +6,7 @@ import { IPostRepository, POST_REPOSITORY } from '../../domain/repositories/post
 import { Inject } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
 
-@Controller('v1/posts')
+@Controller('posts')
 export class PostsController {
   constructor(
     private createPostUseCase: CreatePostUseCase,

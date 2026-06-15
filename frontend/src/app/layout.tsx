@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 import { ThemeProvider } from "@/components/theme-provider";
+import StoreProvider from "@/store/StoreProvider";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
@@ -38,24 +39,26 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster 
-            position="top-center"
-            toastOptions={{
-              style: {
-                background: '#333',
-                color: '#fff',
-                borderRadius: '12px',
-                fontWeight: 'bold',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#facc15',
-                  secondary: '#333',
+          <StoreProvider>
+            {children}
+            <Toaster 
+              position="top-center"
+              toastOptions={{
+                style: {
+                  background: '#333',
+                  color: '#fff',
+                  borderRadius: '12px',
+                  fontWeight: 'bold',
                 },
-              },
-            }}
-          />
+                success: {
+                  iconTheme: {
+                    primary: '#facc15',
+                    secondary: '#333',
+                  },
+                },
+              }}
+            />
+          </StoreProvider>
         </ThemeProvider>
       </body>
     </html>

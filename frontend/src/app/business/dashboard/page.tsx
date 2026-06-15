@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store";
+import { logout as reduxLogout } from "@/store/slices/authSlice";
 import { Store, LogOut, Menu, X } from "lucide-react";
 import Header from "@/components/Header";
 import BusinessSidebar from "./components/Sidebar";
@@ -15,8 +18,9 @@ import SecurityTab from "./components/SecurityTab";
 
 export default function MerchantDashboardPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState("overview");
@@ -26,47 +30,32 @@ export default function MerchantDashboardPage() {
   const [passwordMessage, setPasswordMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
-    const fetchMe = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
+    const fetchBusiness = async () => {
+      if (authLoading) return; // Wait for auth to resolve
+      if (!user) {
         router.push("/business/login");
         return;
       }
+      
+      const token = localStorage.getItem("token");
       try {
-        const [authRes, busRes] = await Promise.all([
-          fetch("http://localhost:5000/api/v1/auth/me", { headers: { Authorization: `Bearer ${token}` } }),
-          fetch("http://localhost:5000/api/v1/businesses/me", { headers: { Authorization: `Bearer ${token}` } }),
-        ]);
-
-        if (authRes.ok) {
-          const authData = await authRes.json();
-          setUser(authData.data || authData);
-        } else {
-          router.push("/business/login");
-          return;
-        }
-
+        const busRes = await fetch("http://localhost:5000/api/v1/businesses/me", { headers: { Authorization: `Bearer ${token}` } });
         if (busRes.ok) {
           const busData = await busRes.json();
           const extractedBusiness = busData.data !== undefined ? busData.data : busData;
-          if (extractedBusiness) {
-            setBusiness(extractedBusiness);
-          } else {
-            setBusiness(null);
-          }
+          setBusiness(extractedBusiness || null);
         }
       } catch (err) {
-        router.push("/business/login");
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchMe();
-  }, [router]);
+    fetchBusiness();
+  }, [user, authLoading, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    dispatch(reduxLogout());
     router.push("/business/login");
   };
 
@@ -103,7 +92,7 @@ export default function MerchantDashboardPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#1a1a1a]">
         <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>

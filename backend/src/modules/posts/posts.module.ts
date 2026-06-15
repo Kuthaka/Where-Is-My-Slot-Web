@@ -3,10 +3,9 @@ import { PostsController } from './presentation/controllers/posts.controller';
 import { CreatePostUseCase } from './application/use-cases/create-post.use-case';
 import { PrismaPostRepository } from './infrastructure/repositories/prisma-post.repository';
 import { POST_REPOSITORY } from './domain/repositories/post.repository.interface';
-import { SharedModule } from '../../shared/shared.module';
 
 @Module({
-  imports: [SharedModule],
+  imports: [],
   controllers: [PostsController],
   providers: [
     CreatePostUseCase,

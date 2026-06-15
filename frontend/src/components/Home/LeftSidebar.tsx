@@ -3,38 +3,22 @@
 import { Store, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function LeftSidebar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [userData, setUserData] = useState<{name: string, username: string | null, role: string} | null>(null);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     setMounted(true);
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-      fetch("http://localhost:5000/api/v1/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-         const user = data.data || data;
-         if (user && user.name) {
-           setUserData(user);
-         }
-      })
-      .catch(err => console.error("Failed to fetch user data", err));
-    }
   }, []);
 
   if (!mounted) return <aside className="hidden lg:flex w-[320px] shrink-0 h-full"></aside>;
 
   return (
     <aside className="hidden lg:flex w-[320px] flex-col gap-6 shrink-0 h-full overflow-y-auto no-scrollbar pb-8">
-      {isLoggedIn ? (
+      {user ? (
         <div className="bg-white dark:bg-[#242424] rounded-[32px] p-6 flex flex-col items-center border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-[140px] bg-gradient-to-b from-gray-900 to-transparent dark:from-black/50 pointer-events-none flex items-center justify-center overflow-hidden">
              <div className="w-[180px] h-[180px] border-[8px] border-yellow-400/80 rounded-full absolute -top-[90px]"></div>
@@ -50,16 +34,16 @@ export default function LeftSidebar() {
 
           <div className="text-center mt-4 w-full">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {userData?.name || "Loading..."}
+              {user.name}
             </h2>
             <p className="text-sm text-gray-500 mb-6">
-              {userData?.username ? `@${userData.username}` : (userData ? "@user" : "...")}
+              {user.username ? `@${user.username}` : "@user"}
             </p>
             <Link 
-              href={userData?.role === 'BUSINESS' ? "/business/dashboard" : "/profile"} 
+              href={user.role === 'BUSINESS' ? "/business/dashboard" : "/profile"} 
               className="block w-full py-3 rounded-xl bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors font-bold text-sm text-gray-800 dark:text-gray-200 shadow-inner"
             >
-              {userData?.role === 'BUSINESS' ? "Business Dashboard" : "My Profile"}
+              {user.role === 'BUSINESS' ? "Business Dashboard" : "My Profile"}
             </Link>
           </div>
         </div>
@@ -85,7 +69,7 @@ export default function LeftSidebar() {
 
       {/* List Your Business CTA */}
       {/* List Your Business CTA (Only show if not already a business) */}
-      {userData?.role !== 'BUSINESS' && (
+      {user?.role !== 'BUSINESS' && (
         <div className="px-2">
           <Link href="/business/register" className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-yellow-950 font-black shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] group relative overflow-hidden">
             <Store className="group-hover:scale-110 transition-transform" />
