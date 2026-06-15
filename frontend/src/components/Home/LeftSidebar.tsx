@@ -1,13 +1,15 @@
 "use client";
 
-import { Store, User } from "lucide-react";
+import { Store, User, Plus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import CreatePostModal from "@/components/CreatePostModal";
 
 export default function LeftSidebar() {
   const [mounted, setMounted] = useState(false);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
@@ -67,17 +69,35 @@ export default function LeftSidebar() {
         </div>
       )}
 
-      {/* List Your Business CTA */}
-      {/* List Your Business CTA (Only show if not already a business) */}
-      {user?.role !== 'BUSINESS' && (
-        <div className="px-2">
-          <Link href="/business/register" className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-yellow-950 font-black shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] group relative overflow-hidden">
-            <Store className="group-hover:scale-110 transition-transform" />
+      {/* Bottom CTA — conditional on role */}
+      <div className="px-2">
+        {user?.role === 'BUSINESS' ? (
+          // Business user: show Create Post button
+          <button
+            onClick={() => setIsPostModalOpen(true)}
+            className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-yellow-950 font-black shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] group relative overflow-hidden"
+          >
+            <Plus size={20} className="group-hover:scale-110 transition-transform" />
+            Create a Post
+          </button>
+        ) : (
+          // Non-business user: show List your business
+          <Link
+            href="/business/register"
+            className="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-yellow-950 font-black shadow-lg shadow-yellow-500/20 transition-all hover:scale-[1.02] group relative overflow-hidden"
+          >
+            <Store size={20} className="group-hover:scale-110 transition-transform" />
             List your business
             <span className="absolute top-0 right-0 bg-white text-yellow-600 text-[10px] font-extrabold px-2 py-1 rounded-bl-xl">FREE</span>
           </Link>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Create Post Modal (for business users on home feed) */}
+      <CreatePostModal
+        isOpen={isPostModalOpen}
+        onClose={() => setIsPostModalOpen(false)}
+      />
     </aside>
   );
 }

@@ -1,16 +1,16 @@
 "use client";
 
-import { CheckCircle2, MapPin, Link as LinkIcon, Calendar, Image as ImageIcon, Gift, MoreHorizontal, Heart, MessageCircle, Share2, BarChart2, Trash2, Store } from "lucide-react";
+import { CheckCircle2, MapPin, Link as LinkIcon, Calendar, Image as ImageIcon, Gift, MoreHorizontal, Heart, MessageCircle, Share2, BarChart2, Trash2, Store, Plus, Zap } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
+import CreatePostModal from "@/components/CreatePostModal";
 
 export default function OverviewTab({ business, user }: { business: any, user?: any }) {
   const [posts, setPosts] = useState<any[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [text, setText] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Edit state
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -63,29 +63,9 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
     if (node) observer.current.observe(node);
   }, [loading, hasMore, nextCursor]);
 
-  const handlePost = async () => {
-    if (!text.trim()) return;
-    setIsSubmitting(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/v1/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ text })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setText("");
-        toast.success("Posted successfully!");
-        fetchPosts(); // Refresh from start
-      } else {
-        toast.error(data.message?.message || data.message || "Failed to post");
-      }
-    } catch (err) {
-      toast.error("Error creating post");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handlePostCreated = (newPost: any) => {
+    setPosts(prev => [newPost, ...prev]);
+    setIsModalOpen(false);
   };
 
   const toggleLike = async (postId: string) => {
@@ -237,32 +217,45 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
         </div>
       </div>
 
-      {/* Composer */}
-      <div className="bg-white dark:bg-[#242424] rounded-[32px] p-5 border border-gray-100 dark:border-gray-800 shadow-sm mb-6 flex gap-4">
-        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-[#1a1a1a] shrink-0 overflow-hidden flex items-center justify-center">
-          {business.logo ? <img src={business.logo} alt="Logo" className="w-full h-full object-cover" /> : <Store size={20} />}
-        </div>
-        <div className="flex-1">
-          <textarea 
-            placeholder="What's happening?" 
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full bg-transparent border-none resize-none focus:ring-0 text-xl placeholder-gray-500 text-gray-900 dark:text-white min-h-[60px]"
-          />
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800 mt-2">
-            <div className="flex items-center gap-2 text-yellow-500">
-              <button className="p-2 hover:bg-yellow-50 dark:hover:bg-yellow-500/10 rounded-full transition-colors"><ImageIcon size={20} /></button>
-            </div>
-            <button 
-              onClick={handlePost} 
-              disabled={isSubmitting || !text.trim()}
-              className="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-full transition-colors shadow-sm disabled:opacity-50"
-            >
-              {isSubmitting ? "Posting..." : "Post"}
-            </button>
+      {/* Post Composer Button */}
+      <div className="bg-white dark:bg-[#242424] rounded-[32px] p-5 border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-[#1a1a1a] shrink-0 overflow-hidden flex items-center justify-center">
+            {business.logo ? <img src={business.logo} alt="Logo" className="w-full h-full object-cover" /> : <Store size={20} />}
           </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex-1 text-left bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-full px-5 py-3.5 text-gray-400 font-medium text-sm transition-all cursor-text"
+          >
+            Share an offer, deal or update...
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-11 h-11 bg-yellow-400 hover:bg-yellow-500 text-black rounded-full flex items-center justify-center shrink-0 shadow-md shadow-yellow-400/30 transition-all hover:scale-105"
+          >
+            <Plus size={20} />
+          </button>
+        </div>
+        <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 text-gray-500">
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 text-sm font-bold hover:text-yellow-500 transition-colors">
+            <ImageIcon size={16} className="text-yellow-500" /> Photo
+          </button>
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 text-sm font-bold hover:text-blue-500 transition-colors">
+            <MapPin size={16} className="text-blue-500" /> Location
+          </button>
+          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 text-sm font-bold hover:text-purple-500 transition-colors">
+            <Zap size={16} className="text-purple-500" /> Flash Deal
+          </button>
         </div>
       </div>
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onPostCreated={handlePostCreated}
+        business={business}
+      />
 
       {/* Feed */}
       <div className="space-y-4">
