@@ -49,8 +49,8 @@ export class OnboardBusinessUseCase {
       coverPhoto: data.coverPhoto || null,
       images: data.images || [],
       socialLinks: data.socialLinks || null,
-      isVerified: false,
-      status: 'PENDING',
+      isVerified: true,
+      status: 'APPROVED',
       createdAt: new Date(),
       updatedAt: new Date(),
     });

@@ -102,24 +102,7 @@ export default function MerchantDashboardPage() {
     );
   }
 
-  if (business && !business.isVerified) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center border border-yellow-100">
-          <div className="w-20 h-20 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Shield size={40} />
-          </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-2">Account Pending Approval</h2>
-          <p className="text-gray-500 mb-8">
-            Your business profile <strong>{business.name}</strong> is currently under review by an administrator. You will gain full access to the dashboard once verified.
-          </p>
-          <button onClick={handleLogout} className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors w-full flex items-center justify-center gap-2">
-            <LogOut size={18} /> Sign Out
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

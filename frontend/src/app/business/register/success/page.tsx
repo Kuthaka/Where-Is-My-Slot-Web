@@ -18,15 +18,15 @@ export default function BusinessSuccessPage() {
           Business Created!
         </h2>
         <p className="text-lg text-gray-600 mb-10 px-4">
-          Congratulations! Your business profile has been successfully submitted and is now pending verification.
+          Congratulations! Your business profile has been successfully created and you are ready to go.
         </p>
 
         <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 mb-8 mx-4 sm:mx-0">
           <h3 className="font-bold text-gray-900 mb-2">What&apos;s next?</h3>
           <ul className="text-left text-sm text-gray-600 space-y-3 mb-6">
-            <li className="flex gap-2"><span className="text-green-500">✓</span> Our team will review your details.</li>
-            <li className="flex gap-2"><span className="text-green-500">✓</span> You&apos;ll receive a confirmation email shortly.</li>
-            <li className="flex gap-2"><span className="text-green-500">✓</span> You can start adding exclusive offers!</li>
+            <li className="flex gap-2"><span className="text-green-500">✓</span> Set up your business dashboard.</li>
+            <li className="flex gap-2"><span className="text-green-500">✓</span> You&apos;ll receive a welcome email shortly.</li>
+            <li className="flex gap-2"><span className="text-green-500">✓</span> You can start adding exclusive offers immediately!</li>
           </ul>
 
           <Link href="/business/login" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-[#1591DC]/30 text-sm font-bold text-white bg-[#1591DC] hover:bg-[#2C5EAD] transition-colors group">
