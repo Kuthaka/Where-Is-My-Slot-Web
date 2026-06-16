@@ -305,7 +305,15 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
                 </div>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-4 flex flex-col gap-3">
+                {/* Post Image */}
+                {post.image && !editingPostId && (
+                  <div className="w-full rounded-[24px] overflow-hidden bg-gray-50 dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 flex justify-center">
+                    <img src={post.image} alt="Media" className="w-full h-auto max-h-[700px] object-contain" />
+                  </div>
+                )}
+
+                {/* Edit Mode or Caption */}
                 {editingPostId === post.id ? (
                   <div className="space-y-3">
                     <textarea 
@@ -319,12 +327,11 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-900 dark:text-white whitespace-pre-wrap text-[15px] leading-normal">{post.text}</p>
-                )}
-                {post.image && !editingPostId && (
-                  <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800">
-                    <img src={post.image} alt="Media" className="w-full h-auto object-cover max-h-[400px]" />
-                  </div>
+                  post.text && (
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap text-[15px] leading-normal px-1">
+                      {post.text}
+                    </p>
+                  )
                 )}
               </div>
 

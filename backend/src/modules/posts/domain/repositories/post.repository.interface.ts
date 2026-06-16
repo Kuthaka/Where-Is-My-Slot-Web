@@ -9,4 +9,5 @@ export interface IPostRepository {
   toggleLike(postId: string, userId: string): Promise<boolean>;
   addComment(postId: string, userId: string, text: string): Promise<any>;
   deleteComment(commentId: string, userId: string): Promise<boolean>;
+  getComments(postId: string): Promise<any[]>;
 }

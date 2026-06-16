@@ -7,13 +7,28 @@ import { PrismaService } from '../../../../shared/database/prisma.service';
 export class CreatePostUseCase {
   constructor(
     @Inject(POST_REPOSITORY) private postRepo: IPostRepository,
-    private prisma: PrismaService
+    private prisma: PrismaService,
+    @Inject('Cloudinary') private cloudinary: any
   ) {}
 
   async execute(businessId: string, data: any) {
+    let imageUrl = null;
+
+    if (data.image) {
+      if (data.image.startsWith('http')) {
+        imageUrl = data.image; // Already a URL
+      } else {
+        // Base64 upload
+        const uploadResponse = await this.cloudinary.uploader.upload(data.image, {
+          folder: 'posts',
+        });
+        imageUrl = uploadResponse.secure_url;
+      }
+    }
+
     const post = new Post({
-      text: data.text,
-      image: data.image || null,
+      text: data.text || '',
+      image: imageUrl,
       tags: data.tags || [],
       location: data.location || null,
       businessId,

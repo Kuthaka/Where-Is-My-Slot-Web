@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { json, urlencoded } from 'express';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
@@ -21,6 +22,10 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors();
+
+  // Increase body size limit for base64 images
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   // Global pipes, filters, and interceptors
   app.useGlobalPipes(

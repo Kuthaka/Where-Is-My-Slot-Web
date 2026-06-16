@@ -1,10 +1,11 @@
 import { Controller, Post, Body, Get, Param, Query, UseGuards, Delete } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
-import { CurrentUser } from '../../../shared/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
+import { CurrentUser } from '../../../../shared/decorators/current-user.decorator';
 import { CreatePostUseCase } from '../../application/use-cases/create-post.use-case';
 import { IPostRepository, POST_REPOSITORY } from '../../domain/repositories/post.repository.interface';
 import { Inject } from '@nestjs/common';
 import { PrismaService } from '../../../../shared/database/prisma.service';
+import { CreatePostDto } from '../../application/dto/create-post.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -16,10 +17,11 @@ export class PostsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async createPost(@CurrentUser() user: any, @Body() data: any) {
+  async createPost(@CurrentUser() user: any, @Body() data: CreatePostDto) {
     const business = await this.prisma.business.findFirst({ where: { ownerId: user.id } });
     if (!business) throw new Error('Business not found');
-    return this.createPostUseCase.execute(business.id, data);
+    const postEntity = await this.createPostUseCase.execute(business.id, data);
+    return postEntity.props || postEntity;
   }
 
   @Get()
@@ -70,10 +72,6 @@ export class PostsController {
 
   @Get(':id/comments')
   async getComments(@Param('id') id: string) {
-    return this.prisma.comment.findMany({
-      where: { postId: id },
-      orderBy: { createdAt: 'asc' },
-      include: { user: { select: { id: true, name: true, username: true } } }
-    });
+    return this.postRepo.getComments(id);
   }
 }

@@ -12,7 +12,7 @@ export class PrismaPostRepository implements IPostRepository {
       data: post.props,
       include: { business: { select: { name: true, username: true, logo: true, isVerified: true } } }
     });
-    return new Post(created);
+    return new Post({ ...created, _count: { likes: 0, comments: 0 } });
   }
 
   async findAll(cursor?: string, limit: number = 5, businessId?: string, userId?: string) {
@@ -83,5 +83,13 @@ export class PrismaPostRepository implements IPostRepository {
     if (!comment || comment.userId !== userId) return false;
     await this.prisma.comment.delete({ where: { id: commentId } });
     return true;
+  }
+
+  async getComments(postId: string) {
+    return this.prisma.comment.findMany({
+      where: { postId },
+      orderBy: { createdAt: 'asc' },
+      include: { user: { select: { id: true, name: true, username: true } } }
+    });
   }
 }

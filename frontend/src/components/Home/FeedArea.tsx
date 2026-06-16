@@ -201,16 +201,18 @@ export default function FeedArea() {
                   </div>
                 </div>
 
-                {/* Post Content */}
-                <p className="text-[15px] text-gray-900 dark:text-gray-100 mb-4 font-medium whitespace-pre-wrap leading-relaxed">
-                  {post.text}
-                </p>
-
                 {/* Post Image */}
                 {post.image && (
-                  <div className="w-full max-h-[450px] rounded-[24px] overflow-hidden mb-4 border border-gray-100 dark:border-gray-800">
-                    <img src={post.image} alt="Post" className="w-full h-full object-cover" />
+                  <div className="w-full rounded-[24px] overflow-hidden mb-4 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 flex justify-center">
+                    <img src={post.image} alt="Post" className="w-full h-auto max-h-[700px] object-contain" />
                   </div>
+                )}
+
+                {/* Post Content (Caption) */}
+                {post.text && (
+                  <p className="text-[15px] text-gray-900 dark:text-gray-100 mb-4 font-medium whitespace-pre-wrap leading-relaxed px-1">
+                    {post.text}
+                  </p>
                 )}
 
                 {/* Post Actions */}

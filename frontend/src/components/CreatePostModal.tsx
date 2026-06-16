@@ -61,8 +61,8 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
   };
 
   const handleSubmit = async () => {
-    if (!caption.trim()) {
-      toast.error("Please write a caption for your post.");
+    if (!imageUrl) {
+      toast.error("An image is required for your post.");
       return;
     }
     setIsSubmitting(true);
@@ -144,27 +144,11 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
 
         {/* Scrollable Body */}
         <div className="overflow-y-auto no-scrollbar flex-1">
-          {/* Caption */}
-          <div className="px-6 pt-5 pb-2">
-            <textarea
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder="What's your offer today? Share a deal, announce an event, or post an update..."
-              rows={4}
-              className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
-            />
-            <div className="flex justify-end mt-1">
-              <span className={`text-xs font-bold ${caption.length > 500 ? 'text-red-400' : 'text-gray-400'}`}>
-                {caption.length}/500
-              </span>
-            </div>
-          </div>
-
-          {/* Image Section */}
-          <div className="px-6 pb-4">
+          {/* Image Section (Priority) */}
+          <div className="px-6 pt-5 pb-4">
             <div className="flex items-center gap-2 mb-3">
               <ImageIcon size={16} className="text-yellow-500" />
-              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Add Image</span>
+              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Add Image (Required)</span>
               <div className="flex bg-gray-100 dark:bg-[#2a2a2a] rounded-full p-1 ml-auto gap-1">
                 <button
                   onClick={() => setImageMode("url")}
@@ -192,9 +176,9 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
             ) : (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-400/5 transition-all group"
+                className="w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-400/5 transition-all group"
               >
-                <ImageIcon size={24} className="text-gray-400 group-hover:text-yellow-500 transition-colors" />
+                <ImageIcon size={28} className="text-gray-400 group-hover:text-yellow-500 transition-colors" />
                 <span className="text-sm font-bold text-gray-400 group-hover:text-yellow-500 transition-colors">
                   Click to upload image
                 </span>
@@ -204,19 +188,35 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
 
             {/* Image Preview */}
             {imagePreview && (
-              <div className="mt-3 relative rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 group">
-                <img src={imagePreview} alt="Preview" className="w-full max-h-[220px] object-cover" />
+              <div className="mt-3 relative rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 group bg-gray-100 dark:bg-[#1a1a1a]">
+                <img src={imagePreview} alt="Preview" className="w-full max-h-[300px] object-contain" />
                 <button
                   onClick={() => { setImagePreview(null); setImageUrl(""); }}
                   className="absolute top-2 right-2 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100"
                 >
                   <X size={14} />
                 </button>
-                <div className="absolute bottom-2 left-2 bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-1">
+                <div className="absolute bottom-2 left-2 bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full flex items-center gap-1 shadow-md">
                   <CheckCircle2 size={10} /> Image ready
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Caption */}
+          <div className="px-6 pb-4 pt-2">
+            <textarea
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Write a caption... (optional)"
+              rows={3}
+              className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
+            />
+            <div className="flex justify-end mt-1">
+              <span className={`text-xs font-bold ${caption.length > 500 ? 'text-red-400' : 'text-gray-400'}`}>
+                {caption.length}/500
+              </span>
+            </div>
           </div>
 
           {/* Location */}
@@ -330,7 +330,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting || !caption.trim()}
+              disabled={isSubmitting || !imageUrl}
               className="px-6 py-2.5 rounded-xl text-sm font-black text-black bg-yellow-400 hover:bg-yellow-500 transition-all shadow-md shadow-yellow-400/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
