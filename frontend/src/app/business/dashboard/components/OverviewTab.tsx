@@ -1,9 +1,10 @@
 "use client";
 
-import { CheckCircle2, MapPin, Link as LinkIcon, Calendar, Image as ImageIcon, Gift, MoreHorizontal, Heart, MessageCircle, Share2, BarChart2, Trash2, Store, Plus, Zap } from "lucide-react";
+import { CheckCircle2, MapPin, Link as LinkIcon, Calendar, Image as ImageIcon, Gift, MoreHorizontal, Heart, MessageCircle, Share2, BarChart2, Trash2, Store, Plus, Zap, Edit2 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import CreatePostModal from "@/components/CreatePostModal";
+import PostCard from "@/components/PostCard";
 
 export default function OverviewTab({ business, user }: { business: any, user?: any }) {
   const [posts, setPosts] = useState<any[]>([]);
@@ -262,103 +263,49 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
         {posts.map((post, index) => {
           const isLast = index === posts.length - 1;
           return (
-            <div 
-              key={post.id} 
-              ref={isLast ? lastPostElementRef : null}
-              className="bg-white dark:bg-[#242424] rounded-[32px] p-5 md:p-6 border border-gray-100 dark:border-gray-800 shadow-sm"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-[#1a1a1a] overflow-hidden shrink-0 flex items-center justify-center">
-                    {post.business.logo ? <img src={post.business.logo} alt="Logo" className="w-full h-full object-cover" /> : <Store size={20} />}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-gray-900 dark:text-white hover:underline">{post.business.name}</span>
-                      {post.business.isVerified && <CheckCircle2 className="text-blue-500 w-4 h-4" fill="currentColor" stroke="white" />}
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                      <span>@{post.business.username || post.business.name.toLowerCase().replace(/\\s+/g, '')}</span>
-                      <span>·</span>
-                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="relative group/menu">
-                  <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2">
-                    <MoreHorizontal size={20} />
-                  </button>
-                  <div className="absolute right-0 top-10 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 shadow-xl rounded-xl w-32 py-2 hidden group-hover/menu:block z-10">
-                    <button 
-                      onClick={() => {
-                        setEditingPostId(post.id);
-                        setEditText(post.text);
-                      }} 
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-[#242424] flex items-center gap-2"
-                    >
-                      <MoreHorizontal size={16} /> Edit
+            <div ref={isLast ? lastPostElementRef : null} key={post.id}>
+              <PostCard
+                post={post}
+                onLike={toggleLike}
+                onCommentClick={fetchComments}
+                onShare={() => {}}
+                hideCaption={editingPostId === post.id}
+                renderMenu={() => (
+                  <div className="relative group/menu">
+                    <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2">
+                      <MoreHorizontal size={20} />
                     </button>
-                    <button onClick={() => deletePost(post.id)} className="w-full text-left px-4 py-2 text-sm text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2">
-                      <Trash2 size={16} /> Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-3">
-                {/* Post Image */}
-                {post.image && !editingPostId && (
-                  <div className="w-full rounded-[24px] overflow-hidden bg-gray-50 dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 flex justify-center">
-                    <img src={post.image} alt="Media" className="w-full h-auto max-h-[700px] object-contain" />
+                    <div className="absolute right-0 top-10 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 shadow-xl rounded-xl w-32 py-2 hidden group-hover/menu:block z-10">
+                      <button 
+                        onClick={() => {
+                          setEditingPostId(post.id);
+                          setEditText(post.text);
+                        }} 
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-[#242424] flex items-center gap-2"
+                      >
+                        <Edit2 size={16} /> Edit
+                      </button>
+                      <button onClick={() => deletePost(post.id)} className="w-full text-left px-4 py-2 text-sm text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2">
+                        <Trash2 size={16} /> Delete
+                      </button>
+                    </div>
                   </div>
                 )}
-
-                {/* Edit Mode or Caption */}
-                {editingPostId === post.id ? (
-                  <div className="space-y-3">
+              >
+                {/* Editing Mode */}
+                {editingPostId === post.id && (
+                  <div className="px-3 pb-3">
                     <textarea 
                       value={editText}
                       onChange={e => setEditText(e.target.value)}
-                      className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-3 min-h-[100px] text-gray-900 dark:text-white focus:outline-none focus:border-yellow-400"
+                      className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl p-3 min-h-[100px] text-gray-900 dark:text-white focus:outline-none focus:border-yellow-400 text-[14px]"
                     />
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-2 mt-2">
                       <button onClick={() => setEditingPostId(null)} className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white">Cancel</button>
                       <button onClick={() => handleEditPost(post.id)} className="px-4 py-2 text-sm font-bold bg-yellow-400 text-black rounded-lg hover:bg-yellow-500">Save Changes</button>
                     </div>
                   </div>
-                ) : (
-                  post.text && (
-                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap text-[15px] leading-normal px-1">
-                      {post.text}
-                    </p>
-                  )
                 )}
-              </div>
-
-              {/* Engagement Action Bar */}
-              <div className="flex items-center justify-between mt-5 pt-1 text-gray-500 max-w-md">
-                <button 
-                  onClick={() => fetchComments(post.id)}
-                  className={`flex items-center gap-2 transition-colors group ${activeComments[post.id] ? 'text-blue-500' : 'hover:text-blue-500'}`}
-                >
-                  <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10">
-                    <MessageCircle size={18} fill={activeComments[post.id] ? "currentColor" : "none"} />
-                  </div>
-                  <span className="text-xs font-bold">{post._count?.comments || 0}</span>
-                </button>
-                <button className="flex items-center gap-2 hover:text-green-500 transition-colors group">
-                  <div className="p-2 rounded-full group-hover:bg-green-50 dark:group-hover:bg-green-500/10"><Share2 size={18} /></div>
-                </button>
-                <button 
-                  onClick={() => toggleLike(post.id)}
-                  className={`flex items-center gap-2 transition-colors group ${post.isLikedByMe ? 'text-red-500' : 'hover:text-red-500'}`}
-                >
-                  <div className="p-2 rounded-full group-hover:bg-red-50 dark:group-hover:bg-red-500/10">
-                    <Heart size={18} fill={post.isLikedByMe ? "currentColor" : "none"} />
-                  </div>
-                  <span className="text-xs font-bold">{post._count?.likes || 0}</span>
-                </button>
-              </div>
 
               {/* Comments Section */}
               {activeComments[post.id] && (
@@ -403,6 +350,7 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
                   </div>
                 </div>
               )}
+              </PostCard>
             </div>
           );
         })}

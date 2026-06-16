@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Zap, ChevronRight, X, CheckCircle2, Store, MapPin, Heart, MessageCircle, Share2, Send, Trash2 } from "lucide-react";
+import PostCard from "../PostCard";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { fetchPosts, toggleLikeOptimistic } from "@/store/slices/postsSlice";
@@ -175,70 +176,13 @@ export default function FeedArea() {
           {posts.map((post, index) => {
             const isLast = index === posts.length - 1;
             return (
-              <article 
-                key={post.id} 
-                ref={isLast ? lastPostElementRef : null}
-                className="bg-white dark:bg-[#242424] rounded-[28px] p-5 shadow-sm border border-gray-100 dark:border-gray-800"
-              >
-                {/* Post Header */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#1a1a1a] flex items-center justify-center shrink-0">
-                    {post.business?.logo ? (
-                      <img src={post.business.logo} alt={post.business.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Store size={20} className="text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <h3 className="font-black text-gray-900 dark:text-white hover:underline cursor-pointer">{post.business?.name}</h3>
-                      {post.business?.isVerified && <CheckCircle2 size={14} className="text-blue-500 fill-current" />}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-gray-500">@{post.business?.username || post.business?.name?.toLowerCase().replace(/\s+/g, '')}</span>
-                      <span className="text-sm font-bold text-gray-400">· {new Date(post.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Post Image */}
-                {post.image && (
-                  <div className="w-full rounded-[24px] overflow-hidden mb-4 bg-gray-50 dark:bg-[#1a1a1a] border border-gray-100 dark:border-gray-800 flex justify-center">
-                    <img src={post.image} alt="Post" className="w-full h-auto max-h-[700px] object-contain" />
-                  </div>
-                )}
-
-                {/* Post Content (Caption) */}
-                {post.text && (
-                  <p className="text-[15px] text-gray-900 dark:text-gray-100 mb-4 font-medium whitespace-pre-wrap leading-relaxed px-1">
-                    {post.text}
-                  </p>
-                )}
-
-                {/* Post Actions */}
-                <div className="flex items-center justify-between mb-2 px-1 pt-2 border-t border-gray-100 dark:border-gray-800/60 mt-4">
-                  <div className="flex items-center gap-6">
-                    <button 
-                      onClick={() => toggleLike(post.id)}
-                      className={`flex items-center gap-1.5 transition-all group ${post.isLikedByMe ? 'text-red-500 scale-110' : 'text-gray-500 hover:text-red-500'}`}
-                    >
-                      <Heart size={20} fill={post.isLikedByMe ? "currentColor" : "none"} className="transition-transform group-active:scale-125" />
-                      <span className="text-sm font-bold">{post._count?.likes || 0}</span>
-                    </button>
-                    <button 
-                      onClick={() => fetchComments(post.id)}
-                      className={`flex items-center gap-1.5 transition-colors group ${activeComments[post.id] ? 'text-blue-500' : 'text-gray-500 hover:text-blue-500'}`}
-                    >
-                      <MessageCircle size={20} fill={activeComments[post.id] ? "currentColor" : "none"} />
-                      <span className="text-sm font-bold">{post._count?.comments || 0}</span>
-                    </button>
-                    <button className="text-gray-500 hover:text-green-500 transition-colors flex items-center gap-1.5">
-                      <Share2 size={20} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Comments Section */}
+                <div ref={isLast ? lastPostElementRef : null}>
+                  <PostCard 
+                    post={post}
+                    onLike={toggleLike}
+                    onCommentClick={fetchComments}
+                    onShare={() => {}}
+                  >
                 {activeComments[post.id] && (
                   <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 space-y-4">
                     <div className="max-h-60 overflow-y-auto space-y-3 no-scrollbar">
@@ -294,7 +238,8 @@ export default function FeedArea() {
                     </div>
                   </div>
                 )}
-              </article>
+                  </PostCard>
+                </div>
             );
           })}
           

@@ -26,7 +26,6 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
   const [showTagsPanel, setShowTagsPanel] = useState(false);
   const [customTag, setCustomTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageMode, setImageMode] = useState<"url" | "upload">("url");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleTagToggle = (tag: string) => {
@@ -43,10 +42,6 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
     }
   };
 
-  const handleImageUrlChange = (url: string) => {
-    setImageUrl(url);
-    setImagePreview(url || null);
-  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,7 +95,6 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
     setSelectedTags([]);
     setShowTagsPanel(false);
     setCustomTag("");
-    setImageMode("url");
     onClose();
   };
 
@@ -149,31 +143,9 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
             <div className="flex items-center gap-2 mb-3">
               <ImageIcon size={16} className="text-yellow-500" />
               <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Add Image (Required)</span>
-              <div className="flex bg-gray-100 dark:bg-[#2a2a2a] rounded-full p-1 ml-auto gap-1">
-                <button
-                  onClick={() => setImageMode("url")}
-                  className={`text-xs px-3 py-1 rounded-full font-bold transition-all ${imageMode === "url" ? "bg-yellow-400 text-black shadow-sm" : "text-gray-500"}`}
-                >
-                  URL
-                </button>
-                <button
-                  onClick={() => setImageMode("upload")}
-                  className={`text-xs px-3 py-1 rounded-full font-bold transition-all ${imageMode === "upload" ? "bg-yellow-400 text-black shadow-sm" : "text-gray-500"}`}
-                >
-                  Upload
-                </button>
-              </div>
             </div>
 
-            {imageMode === "url" ? (
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => handleImageUrlChange(e.target.value)}
-                placeholder="Paste image URL (https://...)"
-                className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-              />
-            ) : (
+            {!imagePreview && (
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-400/5 transition-all group"
@@ -310,7 +282,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated, busine
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 shrink-0 bg-white dark:bg-[#1e1e1e]">
           <div className="flex gap-4 text-gray-400">
-            <button onClick={() => setImageMode("upload")} className="hover:text-yellow-500 transition-colors p-1.5 hover:bg-yellow-50 dark:hover:bg-yellow-400/10 rounded-lg" title="Add image">
+            <button onClick={() => fileInputRef.current?.click()} className="hover:text-yellow-500 transition-colors p-1.5 hover:bg-yellow-50 dark:hover:bg-yellow-400/10 rounded-lg" title="Add image">
               <ImageIcon size={20} />
             </button>
             <button onClick={() => setShowTagsPanel(!showTagsPanel)} className="hover:text-purple-500 transition-colors p-1.5 hover:bg-purple-50 dark:hover:bg-purple-400/10 rounded-lg" title="Add tags">
