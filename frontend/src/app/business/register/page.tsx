@@ -39,17 +39,18 @@ export default function BusinessRegisterPage() {
   return (
     <div className="min-h-screen w-full bg-[#f0f2f5] dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
       <Header />
-      <div 
-        className="relative w-full flex-1 mt-[72px] flex items-center justify-start px-4 sm:px-12 lg:px-24 pb-12"
+      <main 
+        className="relative w-full flex-1 flex"
         style={{
           backgroundImage: "url('/banners/bg-banner.png')",
-          backgroundSize: "contain",
+          backgroundSize: "80% 100%",
           backgroundPosition: "right center",
           backgroundRepeat: "no-repeat",
         }}
       >
-        {/* Form Container */}
-        <div className="w-full max-w-md bg-white/95 dark:bg-[#242424]/95 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-gray-200 dark:border-gray-800 relative z-10 mt-8">
+        <div className="max-w-[1440px] mx-auto w-full flex items-center pt-[96px] pb-12 px-4 lg:px-8">
+          {/* Form Container */}
+          <div className="w-full max-w-md bg-white/95 dark:bg-[#242424]/95 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-gray-200 dark:border-gray-800 relative z-10">
           <div className="flex flex-col items-center">
             <img src="/icons/business-001.png" alt="Business Icon" className="w-20 h-20 object-contain mb-4 drop-shadow-sm dark:brightness-200" />
             <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight text-center">
@@ -102,8 +103,9 @@ export default function BusinessRegisterPage() {
               </div>
             </form>
           </div>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
