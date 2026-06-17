@@ -6,12 +6,14 @@ import { useDashboard } from "../../layout";
 import { Camera, Save, ArrowLeft, Image as ImageIcon, MapPin, Loader2 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import ImageCropperModal from "@/components/ImageCropperModal";
 
 export default function EditProfilePage() {
   const router = useRouter();
   const { business, setBusiness } = useDashboard();
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState<{ logo: boolean; coverPhoto: boolean }>({ logo: false, coverPhoto: false });
+  const [cropConfig, setCropConfig] = useState<{ type: 'logo' | 'coverPhoto' | null, imageSrc: string | null }>({ type: null, imageSrc: null });
 
   const [formData, setFormData] = useState({
     name: "",
@@ -53,11 +55,24 @@ export default function EditProfilePage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'coverPhoto') => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'coverPhoto') => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropConfig({ type, imageSrc: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // Reset input
+  };
+
+  const handleCroppedImageUpload = async (croppedFile: File) => {
+    if (!cropConfig.type) return;
+    const type = cropConfig.type;
+    setCropConfig({ type: null, imageSrc: null }); // Close modal
+
     const formDataObj = new FormData();
-    formDataObj.append("file", file);
+    formDataObj.append("file", croppedFile);
 
     setImageUploading(prev => ({ ...prev, [type]: true }));
     try {
@@ -163,7 +178,7 @@ export default function EditProfilePage() {
                   ) : (
                     <label className="cursor-pointer bg-white dark:bg-black text-gray-900 dark:text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-xl">
                       <Camera size={16} /> Change Cover
-                      <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'coverPhoto')} />
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'coverPhoto')} />
                     </label>
                   )}
                 </div>
@@ -186,7 +201,7 @@ export default function EditProfilePage() {
                   ) : (
                     <label className="cursor-pointer p-2 bg-white dark:bg-black rounded-full text-gray-900 dark:text-white shadow-xl">
                       <Camera size={16} />
-                      <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'logo')} />
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'logo')} />
                     </label>
                   )}
                 </div>
@@ -268,6 +283,15 @@ export default function EditProfilePage() {
           </div>
         </div>
       </form>
+
+      {cropConfig.imageSrc && cropConfig.type && (
+        <ImageCropperModal
+          imageSrc={cropConfig.imageSrc}
+          aspectRatio={cropConfig.type === 'logo' ? 1 : 16 / 5}
+          onCropComplete={handleCroppedImageUpload}
+          onClose={() => setCropConfig({ type: null, imageSrc: null })}
+        />
+      )}
     </div>
   );
 }

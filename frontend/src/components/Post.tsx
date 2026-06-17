@@ -5,7 +5,7 @@ interface PostProps {
   storeName: string;
   distance: string;
   location: string;
-  storeImage: string;
+  logo?: string;
   postImage: string;
   title: string;
   description: string;
@@ -13,14 +13,18 @@ interface PostProps {
   timeInfo?: string;
 }
 
-export default function Post({ storeName, distance, location, storeImage, postImage, title, description, badge, timeInfo }: PostProps) {
+export default function Post({ storeName, distance, location, logo, postImage, title, description, badge, timeInfo }: PostProps) {
   return (
     <div className="bg-white mb-6 pb-6 border-b border-gray-200 last:border-0 md:border md:rounded-xl md:mb-8 md:pb-4 md:shadow-sm">
       {/* Post Header */}
       <div className="flex items-center justify-between px-4 sm:px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-[42px] h-[42px] rounded-full overflow-hidden border border-gray-200 shadow-sm">
-            <Image unoptimized src={storeImage} alt={storeName} width={42} height={42} className="w-full h-full object-cover" />
+          <div className="w-[42px] h-[42px] rounded-full overflow-hidden border border-gray-200 shadow-sm bg-gray-100 flex items-center justify-center shrink-0">
+            {logo ? (
+              <Image unoptimized src={logo} alt={storeName} width={42} height={42} className="w-full h-full object-cover" />
+            ) : (
+              <Image unoptimized src={`https://ui-avatars.com/api/?name=${encodeURIComponent(storeName)}&background=random&color=fff`} alt={storeName} width={42} height={42} className="w-full h-full object-cover" />
+            )}
           </div>
           <div className="flex flex-col">
             <h3 className="font-extrabold text-[15px] text-gray-900 leading-tight">{storeName}</h3>
