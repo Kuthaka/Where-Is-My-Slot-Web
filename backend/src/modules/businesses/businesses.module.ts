@@ -8,6 +8,7 @@ import { OnboardBusinessUseCase } from './application/use-cases/onboard-business
 import { UploadImageUseCase } from './application/use-cases/upload-image.use-case';
 import { PrismaService } from '../../shared/database/prisma.service';
 import { AdminManageBusinessUseCase } from './application/use-cases/admin-manage-business.use-case';
+import { UpdateBusinessUseCase } from './application/use-cases/update-business.use-case';
 
 @Module({
   controllers: [BusinessesController],
@@ -16,6 +17,7 @@ import { AdminManageBusinessUseCase } from './application/use-cases/admin-manage
     OnboardBusinessUseCase,
     UploadImageUseCase,
     AdminManageBusinessUseCase,
+    UpdateBusinessUseCase,
     {
       provide: BUSINESS_REPOSITORY,
       useClass: PrismaBusinessRepository,

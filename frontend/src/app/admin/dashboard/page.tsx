@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, CheckCircle, XCircle, Clock, MapPin, Store, LogOut, ChevronRight, Activity, Users } from "lucide-react";
+import { useModal } from "@/components/ModalProvider";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
+  const { showModal } = useModal();
 
   const fetchBusinesses = async () => {
     const token = localStorage.getItem("token");
@@ -50,23 +52,29 @@ export default function AdminDashboardPage() {
   }, [router]);
 
   const handleAction = async (id: string, action: "approve" | "reject") => {
-    if (!confirm(`Are you sure you want to ${action} this business?`)) return;
-    
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/v1/businesses/${id}/${action}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (!res.ok) throw new Error(`Failed to ${action} business`);
-      
-      // Refresh list
-      fetchBusinesses();
-    } catch (err) {
-      console.error(err);
-      alert(`Error: ${err}`);
-    }
+    showModal({
+      title: "Confirm Action",
+      message: `Are you sure you want to ${action} this business?`,
+      type: "confirm",
+      confirmText: "Yes",
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`http://localhost:5000/api/v1/businesses/${id}/${action}`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (!res.ok) throw new Error(`Failed to ${action} business`);
+          
+          // Refresh list
+          fetchBusinesses();
+        } catch (err) {
+          console.error(err);
+          showModal({ title: "Error", message: `Error: ${err}`, type: "error" });
+        }
+      }
+    });
   };
 
   const handleLogout = () => {

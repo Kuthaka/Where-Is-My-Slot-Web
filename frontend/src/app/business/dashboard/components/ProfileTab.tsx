@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, MapPin, Phone, Mail, Globe, Clock, Info, Check } from "lucide-react";
+import Link from "next/link";
 
 export default function ProfileTab({ business }: { business: any }) {
   if (!business) return null;
@@ -32,9 +33,12 @@ export default function ProfileTab({ business }: { business: any }) {
               {business.tagline && <p className="text-gray-800 dark:text-gray-300 italic mt-2">"{business.tagline}"</p>}
             </div>
             
-            <button className="px-6 py-2.5 bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors rounded-xl font-bold text-gray-900 dark:text-white">
+            <Link 
+              href="/business/dashboard/profile/edit"
+              className="px-6 py-2.5 bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 dark:hover:bg-[#333] transition-colors rounded-xl font-bold text-gray-900 dark:text-white"
+            >
               Edit Profile
-            </button>
+            </Link>
           </div>
         </div>
       </div>

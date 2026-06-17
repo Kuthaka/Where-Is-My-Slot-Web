@@ -16,6 +16,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import StoreProvider from "@/store/StoreProvider";
 import { Toaster } from "react-hot-toast";
 
+import { ModalProvider } from "@/components/ModalProvider";
+
 export const metadata: Metadata = {
   title: "WhereIsMySlot",
   description: "Social and business discovery platform",
@@ -40,7 +42,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <StoreProvider>
-            {children}
+            <ModalProvider>
+              {children}
+            </ModalProvider>
             <Toaster 
               position="top-center"
               toastOptions={{

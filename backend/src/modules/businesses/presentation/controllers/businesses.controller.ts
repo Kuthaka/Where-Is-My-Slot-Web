@@ -10,8 +10,10 @@ import { OnboardBusinessUseCase } from '../../application/use-cases/onboard-busi
 import { UploadImageUseCase } from '../../application/use-cases/upload-image.use-case';
 
 import { AdminManageBusinessUseCase } from '../../application/use-cases/admin-manage-business.use-case';
+import { UpdateBusinessUseCase } from '../../application/use-cases/update-business.use-case';
+import { UpdateBusinessDto } from '../../application/dto/update-business.dto';
 import { BUSINESS_REPOSITORY, IBusinessRepository } from '../../domain/repositories/business.repository.interface';
-import { Inject } from '@nestjs/common';
+import { Inject, Patch } from '@nestjs/common';
 
 @Controller('businesses')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -20,6 +22,7 @@ export class BusinessesController {
     private readonly onboardBusinessUseCase: OnboardBusinessUseCase,
     private readonly uploadImageUseCase: UploadImageUseCase,
     private readonly adminManageBusinessUseCase: AdminManageBusinessUseCase,
+    private readonly updateBusinessUseCase: UpdateBusinessUseCase,
     @Inject(BUSINESS_REPOSITORY)
     private readonly businessRepository: IBusinessRepository,
   ) {}
@@ -52,6 +55,16 @@ export class BusinessesController {
     const businesses = await this.businessRepository.findByOwnerId(user.id);
     if (businesses.length === 0) return null;
     return businesses[0].props; // Return the first business associated with user
+  }
+
+  @Patch('me')
+  @Roles(UserRole.BUSINESS, UserRole.SUPER_ADMIN)
+  async updateMyBusiness(
+    @CurrentUser() user: any,
+    @Body() data: UpdateBusinessDto,
+  ) {
+    const updatedBusiness = await this.updateBusinessUseCase.execute(user.id, data);
+    return updatedBusiness.props;
   }
 
   @Get()

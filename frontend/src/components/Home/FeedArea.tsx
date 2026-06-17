@@ -6,6 +6,7 @@ import PostCard from "../PostCard";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/store";
 import { fetchPosts, toggleLikeOptimistic } from "@/store/slices/postsSlice";
+import { useModal } from "@/components/ModalProvider";
 
 const API_URL = "http://localhost:5000/api/v1";
 
@@ -23,6 +24,7 @@ export default function FeedArea() {
   const dispatch = useDispatch<AppDispatch>();
   const { feed: posts, nextCursor, hasMore, loading, initialLoaded } = useSelector((state: RootState) => state.posts);
   const { user } = useSelector((state: RootState) => state.auth);
+  const { showModal } = useModal();
 
   const [activeFlashIndex, setActiveFlashIndex] = useState<number | null>(null);
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
@@ -56,7 +58,10 @@ export default function FeedArea() {
   }, [loading, hasMore, loadMore]);
 
   const toggleLike = async (postId: string) => {
-    if (!user) return alert("Please login to like posts");
+    if (!user) {
+      showModal({ title: "Login Required", message: "Please login to like posts", type: "alert" });
+      return;
+    }
     // Optimistic update immediately
     dispatch(toggleLikeOptimistic(postId));
     try {
@@ -88,7 +93,10 @@ export default function FeedArea() {
   };
 
   const handleCommentSubmit = async (postId: string) => {
-    if (!user) return alert("Please login to comment");
+    if (!user) {
+      showModal({ title: "Login Required", message: "Please login to comment", type: "alert" });
+      return;
+    }
     const text = commentText[postId]?.trim();
     if (!text) return;
     try {
@@ -109,17 +117,24 @@ export default function FeedArea() {
   };
 
   const deleteComment = async (postId: string, commentId: string) => {
-    if (!confirm("Delete comment?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/posts/comments/${commentId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok && activeComments[postId]) {
-        setActiveComments(prev => ({ ...prev, [postId]: prev[postId].filter((c: any) => c.id !== commentId) }));
+    showModal({
+      title: "Delete Comment",
+      message: "Are you sure you want to delete this comment?",
+      type: "confirm",
+      confirmText: "Delete",
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`${API_URL}/posts/comments/${commentId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok && activeComments[postId]) {
+            setActiveComments(prev => ({ ...prev, [postId]: prev[postId].filter((c: any) => c.id !== commentId) }));
+          }
+        } catch {}
       }
-    } catch {}
+    });
   };
 
   const handleNextFlash = () => {
@@ -176,7 +191,7 @@ export default function FeedArea() {
           {posts.map((post, index) => {
             const isLast = index === posts.length - 1;
             return (
-                <div ref={isLast ? lastPostElementRef : null}>
+                <div key={post.id} ref={isLast ? lastPostElementRef : null}>
                   <PostCard 
                     post={post}
                     onLike={toggleLike}

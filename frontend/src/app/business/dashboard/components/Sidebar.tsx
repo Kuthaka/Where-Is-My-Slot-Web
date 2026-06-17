@@ -11,12 +11,12 @@ interface SidebarProps {
 
 export default function BusinessSidebar({ activeTab, setActiveTab, handleLogout }: SidebarProps) {
   const navItems = [
-    { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-    { id: "posts", label: "Posts", icon: FileText },
-    { id: "offers", label: "Offers", icon: Gift },
-    { id: "parking", label: "Parking", icon: Car },
-    { id: "profile", label: "Profile", icon: Building2 },
-    { id: "security", label: "Security", icon: Shield },
+    { id: "overview", label: "Dashboard", icon: LayoutDashboard, href: "/business/dashboard" },
+    { id: "posts", label: "Posts", icon: FileText, href: "/business/dashboard/posts" },
+    { id: "offers", label: "Offers", icon: Gift, href: "/business/dashboard/offers" },
+    { id: "parking", label: "Parking", icon: Car, href: "/business/dashboard/parking" },
+    { id: "profile", label: "Profile", icon: Building2, href: "/business/dashboard/profile" },
+    { id: "security", label: "Security", icon: Shield, href: "/business/dashboard/security" },
   ];
 
   return (
@@ -35,8 +35,9 @@ export default function BusinessSidebar({ activeTab, setActiveTab, handleLogout 
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
-            <button
+            <Link
               key={item.id}
+              href={item.href}
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all ${
                 isActive
@@ -46,7 +47,7 @@ export default function BusinessSidebar({ activeTab, setActiveTab, handleLogout 
             >
               <Icon size={20} className={isActive ? "text-yellow-500" : ""} />
               {item.label}
-            </button>
+            </Link>
           );
         })}
       </nav>

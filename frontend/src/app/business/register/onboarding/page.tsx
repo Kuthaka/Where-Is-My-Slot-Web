@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, Phone, Building2, UploadCloud, ChevronRight, ChevronLeft, Check, Car, Clock } from "lucide-react";
+import { useModal } from "@/components/ModalProvider";
 
 export default function BusinessOnboarding() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const { showModal } = useModal();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -33,13 +35,13 @@ export default function BusinessOnboarding() {
   const handleNext = () => {
     if (currentStep === 1) {
       if (!formData.name || !formData.email || !formData.phone) {
-        alert("Please fill in all required fields (Name, Email, Phone).");
+        showModal({ title: "Incomplete Details", message: "Please fill in all required fields (Name, Email, Phone).", type: "alert" });
         return;
       }
     }
     if (currentStep === 2) {
       if (!formData.address || !formData.city || !formData.state) {
-        alert("Please fill in location details.");
+        showModal({ title: "Incomplete Details", message: "Please fill in location details.", type: "alert" });
         return;
       }
     }
@@ -72,9 +74,9 @@ export default function BusinessOnboarding() {
       router.push("/business/register/success");
     } catch (error: unknown) {
       if (error instanceof Error) {
-        alert(`Error: ${error.message}`);
+        showModal({ title: "Error", message: `Error: ${error.message}`, type: "error" });
       } else {
-        alert("An error occurred");
+        showModal({ title: "Error", message: "An error occurred", type: "error" });
       }
     } finally {
       setLoading(false);
@@ -104,7 +106,7 @@ export default function BusinessOnboarding() {
         images: [...prev.images, data.data.url],
       }));
     } catch (error) {
-      alert("Failed to upload image. Please try again.");
+      showModal({ title: "Upload Failed", message: "Failed to upload image. Please try again.", type: "error" });
     } finally {
       setLoading(false);
     }

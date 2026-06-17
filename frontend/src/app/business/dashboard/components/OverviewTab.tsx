@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostCard from "@/components/PostCard";
+import { useModal } from "@/components/ModalProvider";
 
 export default function OverviewTab({ business, user }: { business: any, user?: any }) {
   const [posts, setPosts] = useState<any[]>([]);
@@ -12,6 +13,7 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { showModal } = useModal();
   
   // Edit state
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -95,20 +97,27 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
   };
 
   const deletePost = async (postId: string) => {
-    if (!confirm("Are you sure you want to delete this post?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/v1/posts/${postId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setPosts(prev => prev.filter(p => p.id !== postId));
-        toast.success("Post deleted");
+    showModal({
+      title: "Delete Post",
+      message: "Are you sure you want to delete this post?",
+      type: "confirm",
+      confirmText: "Delete",
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`http://localhost:5000/api/v1/posts/${postId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            setPosts(prev => prev.filter(p => p.id !== postId));
+            toast.success("Post deleted");
+          }
+        } catch (err) {
+          console.error(err);
+        }
       }
-    } catch (err) {
-      console.error(err);
-    }
+    });
   };
 
   const handleEditPost = async (postId: string) => {
@@ -170,20 +179,27 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
   };
 
   const deleteComment = async (postId: string, commentId: string) => {
-    if (!confirm("Delete comment?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/v1/posts/comments/${commentId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, _count: { ...p._count, comments: Math.max(0, p._count.comments - 1) } } : p));
-        if (activeComments[postId]) {
-          setActiveComments(prev => ({ ...prev, [postId]: prev[postId].filter((c: any) => c.id !== commentId) }));
-        }
+    showModal({
+      title: "Delete Comment",
+      message: "Are you sure you want to delete this comment?",
+      type: "confirm",
+      confirmText: "Delete",
+      onConfirm: async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`http://localhost:5000/api/v1/posts/comments/${commentId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            setPosts(prev => prev.map(p => p.id === postId ? { ...p, _count: { ...p._count, comments: Math.max(0, p._count.comments - 1) } } : p));
+            if (activeComments[postId]) {
+              setActiveComments(prev => ({ ...prev, [postId]: prev[postId].filter((c: any) => c.id !== commentId) }));
+            }
+          }
+        } catch (err) {}
       }
-    } catch (err) {}
+    });
   };
 
   if (!business) return null;
