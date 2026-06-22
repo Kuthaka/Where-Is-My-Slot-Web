@@ -20,8 +20,9 @@ export default function FeedArea() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { showModal } = useModal();
 
-  const [flashDeals, setFlashDeals] = useState<any[]>([]);
-  const [activeFlashIndex, setActiveFlashIndex] = useState<number | null>(null);
+  const [groupedDeals, setGroupedDeals] = useState<{ business: any, deals: any[] }[]>([]);
+  const [activeGroupIndex, setActiveGroupIndex] = useState<number | null>(null);
+  const [activeDealIndex, setActiveDealIndex] = useState<number>(0);
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
   const [activeComments, setActiveComments] = useState<{ [key: string]: any[] }>({});
 
@@ -42,7 +43,15 @@ export default function FeedArea() {
         const res = await fetch(`${API_URL}/flash-deals`);
         const data = await res.json();
         if (res.ok) {
-          setFlashDeals(data.data ?? data);
+          const deals = data.data ?? data;
+          const groupsMap = new Map();
+          deals.forEach((deal: any) => {
+            if (!groupsMap.has(deal.businessId)) {
+              groupsMap.set(deal.businessId, { business: deal.business, deals: [] });
+            }
+            groupsMap.get(deal.businessId).deals.push(deal);
+          });
+          setGroupedDeals(Array.from(groupsMap.values()));
         }
       } catch (err) {
         console.error(err);
@@ -148,16 +157,27 @@ export default function FeedArea() {
   };
 
   const handleNextFlash = () => {
-    if (activeFlashIndex !== null && activeFlashIndex < flashDeals.length - 2) {
-      setActiveFlashIndex(activeFlashIndex + 1);
+    if (activeGroupIndex === null) return;
+    const currentGroup = groupedDeals[activeGroupIndex];
+    if (activeDealIndex < currentGroup.deals.length - 1) {
+      setActiveDealIndex(activeDealIndex + 1);
+    } else if (activeGroupIndex < groupedDeals.length - 1) {
+      setActiveGroupIndex(activeGroupIndex + 1);
+      setActiveDealIndex(0);
     } else {
-      setActiveFlashIndex(null);
+      setActiveGroupIndex(null);
+      setActiveDealIndex(0);
     }
   };
 
   const handlePrevFlash = () => {
-    if (activeFlashIndex !== null && activeFlashIndex > 0) {
-      setActiveFlashIndex(activeFlashIndex - 1);
+    if (activeGroupIndex === null) return;
+    if (activeDealIndex > 0) {
+      setActiveDealIndex(activeDealIndex - 1);
+    } else if (activeGroupIndex > 0) {
+      const prevGroup = groupedDeals[activeGroupIndex - 1];
+      setActiveGroupIndex(activeGroupIndex - 1);
+      setActiveDealIndex(prevGroup.deals.length - 1);
     }
   };
 
@@ -172,28 +192,22 @@ export default function FeedArea() {
           <span className="text-xs text-blue-500 font-bold cursor-pointer">See all</span>
         </div>
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2">
-          {flashDeals.length === 0 && (
+          {groupedDeals.length === 0 && (
             <p className="text-gray-500 text-sm">No flash deals currently active.</p>
           )}
-          {flashDeals.map((deal, i) => (
+          {groupedDeals.map((group, i) => (
             <div 
-              key={deal.id} 
-              onClick={() => !deal.isMore && setActiveFlashIndex(i)}
+              key={group.business.id} 
+              onClick={() => { setActiveGroupIndex(i); setActiveDealIndex(0); }}
               className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group"
             >
               <div className="relative w-[78px] h-[78px] rounded-[24px] border-[3px] border-transparent group-hover:border-yellow-400 p-[2px] transition-colors bg-gradient-to-tr from-yellow-400 to-red-500">
                 <div className="w-full h-full rounded-[20px] overflow-hidden bg-white dark:bg-[#1a1a1a] border-2 border-white dark:border-[#1a1a1a]">
-                  <img src={deal.business?.logo || "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop"} alt={deal.business?.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <img src={group.business.logo || "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop"} alt={group.business.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                {deal.isMore && (
-                  <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 bg-white text-black rounded-full flex items-center justify-center shadow-md">
-                    <ChevronRight size={16} />
-                  </div>
-                )}
               </div>
               <div className="text-center">
-                <span className="block text-[12px] font-bold text-gray-900 dark:text-white truncate w-[80px]">{deal.business?.name}</span>
-                <span className="block text-[10px] font-semibold text-yellow-600 dark:text-yellow-400 truncate w-[80px]">{deal.offer}</span>
+                <span className="block text-[12px] font-bold text-gray-900 dark:text-white truncate w-[80px]">{group.business.name}</span>
               </div>
             </div>
           ))}
@@ -288,10 +302,10 @@ export default function FeedArea() {
       </section>
 
       {/* Flash Deal Story Viewer Overlay */}
-      {activeFlashIndex !== null && (
+      {activeGroupIndex !== null && groupedDeals[activeGroupIndex] && (
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center">
           <button 
-            onClick={() => setActiveFlashIndex(null)}
+            onClick={() => { setActiveGroupIndex(null); setActiveDealIndex(0); }}
             className="absolute top-6 right-6 text-white hover:text-yellow-400 transition-colors z-50 p-2"
           >
             <X size={32} />
@@ -300,11 +314,11 @@ export default function FeedArea() {
           <div className="relative w-full max-w-[420px] h-[90vh] max-h-[850px] bg-gray-900 rounded-[32px] overflow-hidden shadow-2xl flex flex-col">
             {/* Progress Bars */}
             <div className="absolute top-4 left-0 w-full px-4 flex gap-1.5 z-20">
-              {flashDeals.filter(d => !d.isMore).map((_, i) => (
+              {groupedDeals[activeGroupIndex].deals.map((_, i) => (
                 <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full bg-white rounded-full ${i === activeFlashIndex ? 'animate-story-progress' : i < activeFlashIndex ? 'w-full' : 'w-0'}`}
-                    onAnimationEnd={() => i === activeFlashIndex && handleNextFlash()}
+                    className={`h-full bg-white rounded-full ${i === activeDealIndex ? 'animate-story-progress' : i < activeDealIndex ? 'w-full' : 'w-0'}`}
+                    onAnimationEnd={() => i === activeDealIndex && handleNextFlash()}
                   ></div>
                 </div>
               ))}
@@ -313,27 +327,27 @@ export default function FeedArea() {
             {/* Story Header */}
             <div className="absolute top-8 left-0 w-full px-4 flex items-center gap-3 z-20">
               <div className="w-10 h-10 rounded-full border-2 border-yellow-400 overflow-hidden">
-                <img src={flashDeals[activeFlashIndex].business?.logo || "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop"} alt="Store" className="w-full h-full object-cover" />
+                <img src={groupedDeals[activeGroupIndex].business.logo || "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop"} alt="Store" className="w-full h-full object-cover" />
               </div>
               <div className="text-white drop-shadow-md">
                 <p className="font-bold text-sm flex items-center gap-1">
-                  {flashDeals[activeFlashIndex].business?.name}
-                  {flashDeals[activeFlashIndex].business?.isVerified && <CheckCircle2 size={12} className="text-blue-400 fill-current" />}
+                  {groupedDeals[activeGroupIndex].business.name}
+                  {groupedDeals[activeGroupIndex].business.isVerified && <CheckCircle2 size={12} className="text-blue-400 fill-current" />}
                 </p>
-                <p className="text-xs opacity-80">{flashDeals[activeFlashIndex].type}</p>
+                <p className="text-xs opacity-80">{groupedDeals[activeGroupIndex].deals[activeDealIndex].type}</p>
               </div>
             </div>
 
             {/* Image */}
             <div className="absolute inset-0 z-0">
-              <img src={flashDeals[activeFlashIndex].image} alt="Offer" className="w-full h-full object-cover" />
+              <img src={groupedDeals[activeGroupIndex].deals[activeDealIndex].image} alt="Offer" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80"></div>
             </div>
 
             {/* Offer Text */}
             <div className="absolute bottom-[160px] left-0 w-full px-6 z-20 text-center pointer-events-none">
               <div className="bg-yellow-400 text-black font-black text-3xl p-4 rounded-2xl transform -rotate-2 shadow-xl border-4 border-white inline-block">
-                {flashDeals[activeFlashIndex].offer}
+                {groupedDeals[activeGroupIndex].deals[activeDealIndex].offer}
               </div>
               <p className="text-white font-bold text-lg mt-4 drop-shadow-lg">Swipe up to claim before it ends!</p>
             </div>
@@ -344,9 +358,9 @@ export default function FeedArea() {
                 <Store size={20} />
                 Visit Business Profile
               </button>
-              {flashDeals[activeFlashIndex].navigateLink && (
+              {groupedDeals[activeGroupIndex].deals[activeDealIndex].navigateLink && (
                 <button 
-                  onClick={() => window.open(flashDeals[activeFlashIndex].navigateLink, '_blank')}
+                  onClick={() => window.open(groupedDeals[activeGroupIndex].deals[activeDealIndex].navigateLink, '_blank')}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-colors"
                 >
                   <MapPin size={20} />
