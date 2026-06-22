@@ -46,7 +46,11 @@ export const fetchPosts = createAsyncThunk(
       const data = await res.json();
       // Handle both wrapped { data: ... } and direct response
       const payload = data.data ?? data;
-      return { posts: payload.posts ?? [], nextCursor: payload.nextCursor ?? null };
+      return { 
+        posts: payload.posts ?? [], 
+        nextCursor: payload.nextCursor ?? null,
+        isLoadMore: !!cursor 
+      };
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
@@ -95,10 +99,17 @@ const postsSlice = createSlice({
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.loading = false;
         state.initialLoaded = true;
-        // Deduplicate before appending
-        const existingIds = new Set(state.feed.map(p => p.id));
-        const newPosts = action.payload.posts.filter((p: Post) => !existingIds.has(p.id));
-        state.feed.push(...newPosts);
+        
+        if (action.payload.isLoadMore) {
+          // Deduplicate before appending
+          const existingIds = new Set(state.feed.map(p => p.id));
+          const newPosts = action.payload.posts.filter((p: Post) => !existingIds.has(p.id));
+          state.feed.push(...newPosts);
+        } else {
+          // Initial load or user changed - replace the feed completely
+          state.feed = action.payload.posts;
+        }
+        
         state.nextCursor = action.payload.nextCursor;
         state.hasMore = action.payload.nextCursor !== null;
       })

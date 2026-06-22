@@ -53,7 +53,7 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
     if (business?.id) {
       fetchPosts();
     }
-  }, [business?.id]);
+  }, [business?.id, user?.id]);
 
   const lastPostElementRef = useCallback((node: any) => {
     if (loading) return;

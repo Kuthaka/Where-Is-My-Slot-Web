@@ -4,9 +4,11 @@ import { CreatePostUseCase } from './application/use-cases/create-post.use-case'
 import { PrismaPostRepository } from './infrastructure/repositories/prisma-post.repository';
 import { POST_REPOSITORY } from './domain/repositories/post.repository.interface';
 
+import { FlashDealsController } from './presentation/controllers/flash-deals.controller';
+
 @Module({
   imports: [],
-  controllers: [PostsController],
+  controllers: [PostsController, FlashDealsController],
   providers: [
     CreatePostUseCase,
     { provide: POST_REPOSITORY, useClass: PrismaPostRepository }

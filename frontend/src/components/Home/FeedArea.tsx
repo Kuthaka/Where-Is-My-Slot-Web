@@ -10,14 +10,8 @@ import { useModal } from "@/components/ModalProvider";
 
 const API_URL = "http://localhost:5000/api/v1";
 
-const flashDeals = [
-  { id: 1, name: "Social Offline", offer: "Happy Hour 1+1 🍹", img: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=1200&fit=crop" },
-  { id: 2, name: "Cult Fit", offer: "Free Trial 🏋️‍♂️", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&h=1200&fit=crop" },
-  { id: 3, name: "Nike Store", offer: "Flat 50% Off 👟", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&h=1200&fit=crop" },
-  { id: 4, name: "Truffles", offer: "Free Fries 🍔", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&h=1200&fit=crop" },
-  { id: 5, name: "Third Wave", offer: "BOGO Coffee ☕", img: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&h=1200&fit=crop" },
-  { id: 6, name: "Zudio", offer: "Summer Sale 👕", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop", storyImg: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800&h=1200&fit=crop" },
-  { id: 7, name: "View All", offer: "More deals", img: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&h=200&fit=crop", storyImg: "", isMore: true }
+const fallbackDeals = [
+  { id: 'fallback-1', business: { name: "View All" }, offer: "More deals", image: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&h=200&fit=crop", isMore: true }
 ];
 
 export default function FeedArea() {
@@ -26,6 +20,7 @@ export default function FeedArea() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { showModal } = useModal();
 
+  const [flashDeals, setFlashDeals] = useState<any[]>([]);
   const [activeFlashIndex, setActiveFlashIndex] = useState<number | null>(null);
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
   const [activeComments, setActiveComments] = useState<{ [key: string]: any[] }>({});
@@ -40,6 +35,21 @@ export default function FeedArea() {
       dispatch(fetchPosts({ userId: user?.id }));
     }
   }, [user?.id, initialLoaded, dispatch]);
+
+  useEffect(() => {
+    const loadFlashDeals = async () => {
+      try {
+        const res = await fetch(`${API_URL}/flash-deals`);
+        const data = await res.json();
+        if (res.ok) {
+          setFlashDeals(data.data ?? data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadFlashDeals();
+  }, []);
 
   const loadMore = useCallback(() => {
     if (loading || !hasMore || !nextCursor) return;
@@ -162,15 +172,18 @@ export default function FeedArea() {
           <span className="text-xs text-blue-500 font-bold cursor-pointer">See all</span>
         </div>
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-2">
+          {flashDeals.length === 0 && (
+            <p className="text-gray-500 text-sm">No flash deals currently active.</p>
+          )}
           {flashDeals.map((deal, i) => (
             <div 
               key={deal.id} 
               onClick={() => !deal.isMore && setActiveFlashIndex(i)}
               className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group"
             >
-              <div className="relative w-[78px] h-[78px] rounded-[24px] border-[3px] border-transparent group-hover:border-yellow-400 p-[2px] transition-colors bg-gradient-to-tr from-yellow-400 to-red-500 rounded-[26px]">
+              <div className="relative w-[78px] h-[78px] rounded-[24px] border-[3px] border-transparent group-hover:border-yellow-400 p-[2px] transition-colors bg-gradient-to-tr from-yellow-400 to-red-500">
                 <div className="w-full h-full rounded-[20px] overflow-hidden bg-white dark:bg-[#1a1a1a] border-2 border-white dark:border-[#1a1a1a]">
-                  <img src={deal.img} alt={deal.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <img src={deal.business?.logo || "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop"} alt={deal.business?.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 {deal.isMore && (
                   <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 bg-white text-black rounded-full flex items-center justify-center shadow-md">
@@ -179,7 +192,7 @@ export default function FeedArea() {
                 )}
               </div>
               <div className="text-center">
-                <span className="block text-[12px] font-bold text-gray-900 dark:text-white truncate w-[80px]">{deal.name}</span>
+                <span className="block text-[12px] font-bold text-gray-900 dark:text-white truncate w-[80px]">{deal.business?.name}</span>
                 <span className="block text-[10px] font-semibold text-yellow-600 dark:text-yellow-400 truncate w-[80px]">{deal.offer}</span>
               </div>
             </div>
@@ -300,25 +313,25 @@ export default function FeedArea() {
             {/* Story Header */}
             <div className="absolute top-8 left-0 w-full px-4 flex items-center gap-3 z-20">
               <div className="w-10 h-10 rounded-full border-2 border-yellow-400 overflow-hidden">
-                <img src={flashDeals[activeFlashIndex].img} alt="Store" className="w-full h-full object-cover" />
+                <img src={flashDeals[activeFlashIndex].business?.logo || "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop"} alt="Store" className="w-full h-full object-cover" />
               </div>
               <div className="text-white drop-shadow-md">
                 <p className="font-bold text-sm flex items-center gap-1">
-                  {flashDeals[activeFlashIndex].name}
-                  <CheckCircle2 size={12} className="text-blue-400 fill-current" />
+                  {flashDeals[activeFlashIndex].business?.name}
+                  {flashDeals[activeFlashIndex].business?.isVerified && <CheckCircle2 size={12} className="text-blue-400 fill-current" />}
                 </p>
-                <p className="text-xs opacity-80">Sponsored</p>
+                <p className="text-xs opacity-80">{flashDeals[activeFlashIndex].type}</p>
               </div>
             </div>
 
             {/* Image */}
             <div className="absolute inset-0 z-0">
-              <img src={flashDeals[activeFlashIndex].storyImg} alt="Offer" className="w-full h-full object-cover" />
+              <img src={flashDeals[activeFlashIndex].image} alt="Offer" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80"></div>
             </div>
 
             {/* Offer Text */}
-            <div className="absolute bottom-[160px] left-0 w-full px-6 z-20 text-center">
+            <div className="absolute bottom-[160px] left-0 w-full px-6 z-20 text-center pointer-events-none">
               <div className="bg-yellow-400 text-black font-black text-3xl p-4 rounded-2xl transform -rotate-2 shadow-xl border-4 border-white inline-block">
                 {flashDeals[activeFlashIndex].offer}
               </div>
@@ -331,10 +344,15 @@ export default function FeedArea() {
                 <Store size={20} />
                 Visit Business Profile
               </button>
-              <button className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-colors">
-                <MapPin size={20} />
-                Navigate to Map
-              </button>
+              {flashDeals[activeFlashIndex].navigateLink && (
+                <button 
+                  onClick={() => window.open(flashDeals[activeFlashIndex].navigateLink, '_blank')}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  <MapPin size={20} />
+                  Navigate
+                </button>
+              )}
             </div>
 
             {/* Tap Zones */}

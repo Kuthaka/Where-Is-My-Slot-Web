@@ -61,4 +61,5 @@ model Business {
   owner            User?    @relation(fields: [ownerId], references: [id])
   offers           Offer[]
   posts            Post[]
+  flashDeals       FlashDeal[]
 }
