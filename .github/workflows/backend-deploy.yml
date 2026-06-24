@@ -1,17 +1,59 @@
-name: Backend Deploy
+name: Backend CI/CD
 
 on:
   push:
     branches:
       - master
+    paths:
+      - "backend/**"
 
 jobs:
-  test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Success
-        run: echo "Workflow is running"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Prisma Generate
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Build NestJS
+        working-directory: backend
+        run: npm run build
+
+      - name: Copy Files To EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "backend/dist,backend/package.json,backend/package-lock.json,backend/prisma,backend/ecosystem.config.js"
+          target: "/var/www/whereslot-api"
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /var/www/whereslot-api/backend
+
+            npm ci --omit=dev
+
+            npx prisma generate
+
+            pm2 startOrReload ecosystem.config.js
+
+            pm2 save
