@@ -52,7 +52,7 @@ jobs:
 
             npm ci --omit=dev
 
-            npx prisma generate
+            npx prisma generate --schema=prisma/schema/schema.prisma
 
             pm2 startOrReload ecosystem.config.js
 

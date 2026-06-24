@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: "whereslot-api",
+      cwd: "/var/www/whereslot-api/backend",
       script: "dist/src/main.js",
-      cwd: "/var/www/whereslot-api",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
