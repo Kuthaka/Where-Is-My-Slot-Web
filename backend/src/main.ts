@@ -7,7 +7,6 @@ import { TransformInterceptor } from './shared/interceptors/transform.intercepto
 import { LoggingInterceptor } from './shared/interceptors/logging.interceptor';
 import { ConfigService } from '@nestjs/config';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
