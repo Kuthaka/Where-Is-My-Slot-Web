@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Param, Query } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../../../shared/guards/roles.guard';
 import { Roles } from '../../../../shared/decorators/roles.decorator';
@@ -8,15 +8,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { OnboardBusinessDto } from '../../application/dto/onboard-business.dto';
 import { OnboardBusinessUseCase } from '../../application/use-cases/onboard-business.use-case';
 import { UploadImageUseCase } from '../../application/use-cases/upload-image.use-case';
-
 import { AdminManageBusinessUseCase } from '../../application/use-cases/admin-manage-business.use-case';
 import { UpdateBusinessUseCase } from '../../application/use-cases/update-business.use-case';
 import { UpdateBusinessDto } from '../../application/dto/update-business.dto';
 import { BUSINESS_REPOSITORY, IBusinessRepository } from '../../domain/repositories/business.repository.interface';
 import { Inject, Patch } from '@nestjs/common';
+import { PrismaService } from '../../../../shared/database/prisma.service';
 
 @Controller('businesses')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class BusinessesController {
   constructor(
     private readonly onboardBusinessUseCase: OnboardBusinessUseCase,
@@ -25,9 +24,76 @@ export class BusinessesController {
     private readonly updateBusinessUseCase: UpdateBusinessUseCase,
     @Inject(BUSINESS_REPOSITORY)
     private readonly businessRepository: IBusinessRepository,
+    private readonly prisma: PrismaService,
   ) {}
 
+  // ─── Public Routes (no auth) ─────────────────────────────────────────────
+
+  @Get('explore')
+  async exploreBusinesses(
+    @Query('search') search?: string,
+    @Query('category') category?: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const take = limit ? Math.min(parseInt(limit, 10), 20) : 12;
+    const where: any = { status: 'APPROVED' };
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { tagline: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { area: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+        { primaryCategory: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (category && category !== 'All') {
+      where.primaryCategory = { contains: category, mode: 'insensitive' };
+    }
+
+    const businesses = await this.prisma.business.findMany({
+      where,
+      take: take + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      orderBy: [{ isVerified: 'desc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        tagline: true,
+        description: true,
+        primaryCategory: true,
+        subCategories: true,
+        logo: true,
+        coverPhoto: true,
+        area: true,
+        city: true,
+        isVerified: true,
+        phone: true,
+        googleMapsUrl: true,
+        _count: { select: { posts: true, flashDeals: true } },
+        flashDeals: {
+          where: { activeUntil: { gt: new Date() } },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    });
+
+    const hasMore = businesses.length > take;
+    const items = hasMore ? businesses.slice(0, take) : businesses;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+    return { businesses: items, nextCursor, hasMore };
+  }
+
+  // ─── Business Owner Routes ─────────────────────────────────────────────
+
   @Post('onboard')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.BUSINESS, UserRole.SUPER_ADMIN)
   async onboardBusiness(
     @CurrentUser() user: any,
@@ -40,6 +106,7 @@ export class BusinessesController {
   }
 
   @Post('upload-image')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.BUSINESS, UserRole.SUPER_ADMIN)
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
@@ -50,14 +117,16 @@ export class BusinessesController {
   }
 
   @Get('me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.BUSINESS, UserRole.SUPER_ADMIN)
   async getMyBusiness(@CurrentUser() user: any) {
     const businesses = await this.businessRepository.findByOwnerId(user.id);
     if (businesses.length === 0) return null;
-    return businesses[0].props; // Return the first business associated with user
+    return businesses[0].props;
   }
 
   @Patch('me')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.BUSINESS, UserRole.SUPER_ADMIN)
   async updateMyBusiness(
     @CurrentUser() user: any,
@@ -67,7 +136,10 @@ export class BusinessesController {
     return updatedBusiness.props;
   }
 
+  // ─── Admin Routes ─────────────────────────────────────────────────────
+
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   async getAllBusinesses() {
     const businesses = await this.adminManageBusinessUseCase.getAllBusinesses();
@@ -75,6 +147,7 @@ export class BusinessesController {
   }
 
   @Post(':id/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   async approveBusiness(@Param('id') id: string) {
     const business = await this.adminManageBusinessUseCase.approveBusiness(id);
@@ -82,6 +155,7 @@ export class BusinessesController {
   }
 
   @Post(':id/reject')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   async rejectBusiness(@Param('id') id: string) {
     const business = await this.adminManageBusinessUseCase.rejectBusiness(id);
@@ -89,6 +163,7 @@ export class BusinessesController {
   }
 
   @Post('admin/add')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   async adminAddBusiness(@Body() body: OnboardBusinessDto) {
     return this.adminManageBusinessUseCase.createAdminBusiness(body);

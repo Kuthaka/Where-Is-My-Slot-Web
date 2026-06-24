@@ -7,7 +7,7 @@ import {
   MapPin, Compass, Car, User, LogOut
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
@@ -19,6 +19,7 @@ export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
@@ -62,13 +63,14 @@ export default function Header() {
 
         {/* Navigation Icons */}
         <div className="flex items-center justify-center gap-8 flex-1">
-          <Link href="/" className="text-yellow-400 flex flex-col items-center gap-1 group">
-            <Home size={24} className="fill-current" />
-            <div className="w-1 h-1 rounded-full bg-yellow-400"></div>
+          <Link href="/" className={`flex flex-col items-center gap-1 group transition-colors ${pathname === '/' ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>
+            <Home size={24} className={pathname === '/' ? 'fill-current' : ''} />
+            {pathname === '/' && <div className="w-1 h-1 rounded-full bg-yellow-400"></div>}
           </Link>
-          <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Explore">
-            <Compass size={24} />
-          </button>
+          <Link href="/explore" className={`flex flex-col items-center gap-1 group transition-colors ${pathname === '/explore' ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}>
+            <Compass size={24} className={pathname === '/explore' ? 'fill-current' : ''} />
+            {pathname === '/explore' && <div className="w-1 h-1 rounded-full bg-yellow-400"></div>}
+          </Link>
           <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Parking">
             <Car size={24} />
           </button>
