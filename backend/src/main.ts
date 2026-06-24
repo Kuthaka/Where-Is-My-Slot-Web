@@ -13,6 +13,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 5000;
 
+  
   // Global prefixes and versioning
   app.setGlobalPrefix('api');
   app.enableVersioning({
