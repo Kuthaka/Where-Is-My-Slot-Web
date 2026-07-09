@@ -12,7 +12,7 @@ export class OnboardBusinessUseCase {
       id: uuidv4(),
       ownerId: (data.ownerId as string) ?? null,
       name: data.name as string,
-      username: (data.username as string) ?? null,
+      username: (data.username as string) || undefined,
       tagline: (data.tagline as string) ?? null,
       description: (data.description as string) ?? null,
       establishedYear: (data.establishedYear as number) ?? null,

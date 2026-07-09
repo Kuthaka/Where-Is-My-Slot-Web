@@ -28,6 +28,7 @@ export class MongooseBusinessRepository implements IBusinessRepository {
   async create(business: Business): Promise<Business> {
     const propsToSave: Record<string, unknown> = { ...business.props };
     if (!propsToSave.ownerId) delete propsToSave.ownerId;
+    if (!propsToSave.username) delete propsToSave.username;
     delete propsToSave.id; // Let MongoDB generate the _id
 
     const created = await BusinessModel.create(propsToSave);
@@ -39,9 +40,15 @@ export class MongooseBusinessRepository implements IBusinessRepository {
     const updateData = (data as any).props || data;
     delete updateData.id;
 
+    const query: any = { $set: updateData };
+    if (updateData.username === null || updateData.username === '') {
+      delete updateData.username;
+      query.$unset = { username: 1 };
+    }
+
     const updated = await BusinessModel.findByIdAndUpdate(
       id,
-      { $set: updateData },
+      query,
       { new: true }
     ).exec();
 
