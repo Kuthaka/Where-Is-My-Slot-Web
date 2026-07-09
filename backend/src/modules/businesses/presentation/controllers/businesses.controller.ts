@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Param, Query } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Param, Query, Inject } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../../../shared/guards/roles.guard';
 import { Roles } from '../../../../shared/decorators/roles.decorator';
@@ -12,8 +12,10 @@ import { AdminManageBusinessUseCase } from '../../application/use-cases/admin-ma
 import { UpdateBusinessUseCase } from '../../application/use-cases/update-business.use-case';
 import { UpdateBusinessDto } from '../../application/dto/update-business.dto';
 import { BUSINESS_REPOSITORY, IBusinessRepository } from '../../domain/repositories/business.repository.interface';
-import { Inject, Patch } from '@nestjs/common';
-import { PrismaService } from '../../../../shared/database/prisma.service';
+import { Patch } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Business } from '../../../../models/business.schema';
 
 @Controller('businesses')
 export class BusinessesController {
@@ -24,10 +26,8 @@ export class BusinessesController {
     private readonly updateBusinessUseCase: UpdateBusinessUseCase,
     @Inject(BUSINESS_REPOSITORY)
     private readonly businessRepository: IBusinessRepository,
-    private readonly prisma: PrismaService,
+    @InjectModel(Business.name) private readonly businessModel: Model<Business>,
   ) {}
-
-  // ─── Public Routes (no auth) ─────────────────────────────────────────────
 
   @Get('explore')
   async exploreBusinesses(
@@ -40,57 +40,43 @@ export class BusinessesController {
     const where: any = { status: 'APPROVED' };
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { tagline: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { area: { contains: search, mode: 'insensitive' } },
-        { city: { contains: search, mode: 'insensitive' } },
-        { primaryCategory: { contains: search, mode: 'insensitive' } },
+      where.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { tagline: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { area: { $regex: search, $options: 'i' } },
+        { city: { $regex: search, $options: 'i' } },
+        { primaryCategory: { $regex: search, $options: 'i' } },
       ];
     }
 
     if (category && category !== 'All') {
-      where.primaryCategory = { contains: category, mode: 'insensitive' };
+      where.primaryCategory = { $regex: category, $options: 'i' };
     }
 
-    const businesses = await this.prisma.business.findMany({
-      where,
-      take: take + 1,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      orderBy: [{ isVerified: 'desc' }, { createdAt: 'desc' }],
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        tagline: true,
-        description: true,
-        primaryCategory: true,
-        subCategories: true,
-        logo: true,
-        coverPhoto: true,
-        area: true,
-        city: true,
-        isVerified: true,
-        phone: true,
-        googleMapsUrl: true,
-        _count: { select: { posts: true, flashDeals: true } },
-        flashDeals: {
-          where: { activeUntil: { gt: new Date() } },
-          select: { id: true },
-          take: 1,
-        },
-      },
-    });
+    if (cursor) {
+      where._id = { $lt: new Types.ObjectId(cursor) };
+    }
+
+    const businesses = await this.businessModel.find(where)
+      .sort({ isVerified: -1, createdAt: -1 })
+      .limit(take + 1)
+      .select('name username tagline description primaryCategory subCategories logo coverPhoto area city isVerified phone googleMapsUrl')
+      .exec();
 
     const hasMore = businesses.length > take;
     const items = hasMore ? businesses.slice(0, take) : businesses;
-    const nextCursor = hasMore ? items[items.length - 1].id : null;
+    const nextCursor = hasMore ? items[items.length - 1]._id.toString() : null;
 
-    return { businesses: items, nextCursor, hasMore };
+    const formattedItems = items.map(b => ({
+      ...b.toObject(),
+      id: b._id.toString(),
+      _count: { posts: 0, flashDeals: 0 },
+      flashDeals: []
+    }));
+
+    return { businesses: formattedItems, nextCursor, hasMore };
   }
-
-  // ─── Business Owner Routes ─────────────────────────────────────────────
 
   @Post('onboard')
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -135,8 +121,6 @@ export class BusinessesController {
     const updatedBusiness = await this.updateBusinessUseCase.execute(user.id, data);
     return updatedBusiness.props;
   }
-
-  // ─── Admin Routes ─────────────────────────────────────────────────────
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)

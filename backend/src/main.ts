@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { json, urlencoded } from 'express';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
@@ -40,6 +41,16 @@ async function bootstrap() {
 
   // Graceful shutdown
   app.enableShutdownHooks();
+
+  // Swagger Configuration
+  const config = new DocumentBuilder()
+    .setTitle('Where Is My Slot API')
+    .setDescription('The Where Is My Slot API description')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(port);
   console.log(`Application is running on: await app.getUrl()`);

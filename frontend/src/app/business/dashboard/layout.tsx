@@ -47,14 +47,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const activeTab = getActiveTab();
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/business/login");
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    
     const fetchBusiness = async () => {
-      if (authLoading) return;
-      if (!user) {
-        router.push("/business/login");
-        return;
-      }
-      
-      const token = localStorage.getItem("token");
       try {
         const busRes = await fetch("http://localhost:5000/api/v1/businesses/me", { headers: { Authorization: `Bearer ${token}` } });
         if (busRes.ok) {
@@ -69,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     };
     fetchBusiness();
-  }, [user, authLoading, router]);
+  }, []);
 
   const handleLogout = () => {
     dispatch(reduxLogout());

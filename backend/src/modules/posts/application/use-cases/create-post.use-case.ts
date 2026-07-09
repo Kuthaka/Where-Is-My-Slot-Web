@@ -1,14 +1,12 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
 import { IPostRepository, POST_REPOSITORY } from '../../domain/repositories/post.repository.interface';
 import { Post } from '../../domain/entities/post.entity';
-import { PrismaService } from '../../../../shared/database/prisma.service';
 
 @Injectable()
 export class CreatePostUseCase {
   constructor(
     @Inject(POST_REPOSITORY) private postRepo: IPostRepository,
-    private prisma: PrismaService,
-    @Inject('Cloudinary') private cloudinary: any
+    @Optional() @Inject('Cloudinary') private cloudinary: any
   ) {}
 
   async execute(businessId: string, data: any) {
@@ -19,10 +17,12 @@ export class CreatePostUseCase {
         imageUrl = data.image; // Already a URL
       } else {
         // Base64 upload
-        const uploadResponse = await this.cloudinary.uploader.upload(data.image, {
-          folder: 'posts',
-        });
-        imageUrl = uploadResponse.secure_url;
+        if (this.cloudinary) {
+          const uploadResponse = await this.cloudinary.uploader.upload(data.image, {
+            folder: 'posts',
+          });
+          imageUrl = uploadResponse.secure_url;
+        }
       }
     }
 

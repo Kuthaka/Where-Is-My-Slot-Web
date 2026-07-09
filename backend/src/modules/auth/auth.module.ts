@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
@@ -12,14 +13,15 @@ import { SignupBusinessUseCase } from './application/use-cases/signup-business.u
 import { SetPasswordUseCase } from './application/use-cases/set-password.use-case';
 import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
 import { OTP_REPOSITORY } from './domain/repositories/otp.repository.interface';
-import { PrismaOtpRepository } from './infrastructure/repositories/prisma-otp.repository';
+import { MongooseOtpRepository } from './infrastructure/repositories/mongoose-otp.repository';
 import { UsersModule } from '../users/users.module';
-import { PrismaService } from '../../shared/database/prisma.service';
+import { Otp, OtpSchema } from '../../models/otp.schema';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    MongooseModule.forFeature([{ name: Otp.name, schema: OtpSchema }]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
@@ -47,7 +49,6 @@ import { PrismaService } from '../../shared/database/prisma.service';
   ],
   controllers: [AuthController],
   providers: [
-    PrismaService,
     JwtStrategy,
     SendOtpUseCase,
     VerifyOtpUseCase,
@@ -57,7 +58,7 @@ import { PrismaService } from '../../shared/database/prisma.service';
     RegisterUserUseCase,
     {
       provide: OTP_REPOSITORY,
-      useClass: PrismaOtpRepository,
+      useClass: MongooseOtpRepository,
     },
   ],
   exports: [JwtModule],

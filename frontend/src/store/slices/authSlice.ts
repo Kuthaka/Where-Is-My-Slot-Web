@@ -61,6 +61,9 @@ const authSlice = createSlice({
         document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       }
     },
+    stopLoading: (state) => {
+      state.loading = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -81,5 +84,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { setCredentials, logout, stopLoading } = authSlice.actions;
 export default authSlice.reducer;

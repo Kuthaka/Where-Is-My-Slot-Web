@@ -4,23 +4,25 @@ import { CurrentUser } from '../../../../shared/decorators/current-user.decorato
 import { CreatePostUseCase } from '../../application/use-cases/create-post.use-case';
 import { IPostRepository, POST_REPOSITORY } from '../../domain/repositories/post.repository.interface';
 import { Inject } from '@nestjs/common';
-import { PrismaService } from '../../../../shared/database/prisma.service';
 import { CreatePostDto } from '../../application/dto/create-post.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Business } from '../../../../models/business.schema';
 
 @Controller('posts')
 export class PostsController {
   constructor(
     private createPostUseCase: CreatePostUseCase,
     @Inject(POST_REPOSITORY) private postRepo: IPostRepository,
-    private prisma: PrismaService
+    @InjectModel(Business.name) private businessModel: Model<Business>
   ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
   async createPost(@CurrentUser() user: any, @Body() data: CreatePostDto) {
-    const business = await this.prisma.business.findFirst({ where: { ownerId: user.id } });
+    const business = await this.businessModel.findOne({ ownerId: user.id }).exec();
     if (!business) throw new Error('Business not found');
-    const postEntity = await this.createPostUseCase.execute(business.id, data);
+    const postEntity = await this.createPostUseCase.execute(business._id.toString(), data);
     return postEntity.props || postEntity;
   }
 
@@ -33,9 +35,9 @@ export class PostsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   async deletePost(@CurrentUser() user: any, @Param('id') id: string) {
-    const business = await this.prisma.business.findFirst({ where: { ownerId: user.id } });
+    const business = await this.businessModel.findOne({ ownerId: user.id }).exec();
     const post = await this.postRepo.findById(id);
-    if (!business || post?.businessId !== business.id) throw new Error('Unauthorized');
+    if (!business || post?.businessId !== business._id.toString()) throw new Error('Unauthorized');
     await this.postRepo.delete(id);
     return { success: true };
   }
@@ -43,9 +45,9 @@ export class PostsController {
   @Post(':id')
   @UseGuards(JwtAuthGuard)
   async updatePost(@CurrentUser() user: any, @Param('id') id: string, @Body() data: any) {
-    const business = await this.prisma.business.findFirst({ where: { ownerId: user.id } });
+    const business = await this.businessModel.findOne({ ownerId: user.id }).exec();
     const post = await this.postRepo.findById(id);
-    if (!business || post?.businessId !== business.id) throw new Error('Unauthorized');
+    if (!business || post?.businessId !== business._id.toString()) throw new Error('Unauthorized');
     return this.postRepo.update(id, data.text, data.image);
   }
 

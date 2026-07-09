@@ -1,11 +1,17 @@
 import { Controller, Post, Body, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
 import { CurrentUser } from '../../../../shared/decorators/current-user.decorator';
-import { PrismaService } from '../../../../shared/database/prisma.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Business } from '../../../../models/business.schema';
+import { FlashDeal } from '../../../../models/flashdeal.schema';
 
 @Controller('flash-deals')
 export class FlashDealsController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    @InjectModel(Business.name) private businessModel: Model<Business>,
+    @InjectModel(FlashDeal.name) private flashDealModel: Model<FlashDeal>
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -13,31 +19,33 @@ export class FlashDealsController {
     @CurrentUser() user: any,
     @Body() data: { offer: string; image: string; type?: string; navigateLink?: string }
   ) {
-    const business = await this.prisma.business.findFirst({ where: { ownerId: user.id } });
+    const business = await this.businessModel.findOne({ ownerId: user.id }).exec();
     if (!business) throw new Error('Business not found');
     
-    return this.prisma.flashDeal.create({
-      data: {
-        businessId: business.id,
-        offer: data.offer,
-        image: data.image,
-        type: data.type || 'DISCOUNT',
-        navigateLink: data.navigateLink || null,
-        activeUntil: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
-      }
+    return this.flashDealModel.create({
+      businessId: business._id.toString(),
+      offer: data.offer,
+      image: data.image,
+      type: data.type || 'DISCOUNT',
+      navigateLink: data.navigateLink || undefined,
+      activeUntil: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
     });
   }
 
   @Get()
   async getFlashDeals(@Query('businessId') businessId?: string) {
-    const where = businessId 
-      ? { businessId, activeUntil: { gt: new Date() } } 
-      : { activeUntil: { gt: new Date() } };
+    const where: any = { activeUntil: { $gt: new Date() } };
+    if (businessId) where.businessId = new Types.ObjectId(businessId);
       
-    return this.prisma.flashDeal.findMany({
-      where,
-      include: { business: { select: { id: true, name: true, logo: true, isVerified: true, username: true } } },
-      orderBy: { createdAt: 'desc' }
-    });
+    const deals = await this.flashDealModel.find(where).sort({ createdAt: -1 }).exec();
+    
+    // Populate business manually or use Mongoose populate if refs are set correctly
+    return Promise.all(deals.map(async deal => {
+      const business = await this.businessModel.findById(deal.businessId).exec();
+      return {
+        ...deal.toObject(),
+        business: business ? { id: business._id, name: business.name, logo: business.logo, isVerified: business.isVerified, username: business.username } : null
+      };
+    }));
   }
 }

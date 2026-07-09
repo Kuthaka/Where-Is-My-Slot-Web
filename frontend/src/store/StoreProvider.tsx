@@ -3,7 +3,7 @@
 import { Provider } from 'react-redux';
 import { store, AppDispatch } from './index';
 import { useEffect } from 'react';
-import { fetchCurrentUser } from './slices/authSlice';
+import { fetchCurrentUser, stopLoading } from './slices/authSlice';
 
 // Create a component that initializes the app state
 function AppInitializer({ children }: { children: React.ReactNode }) {
@@ -12,6 +12,8 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('token');
     if (token) {
       store.dispatch(fetchCurrentUser() as any);
+    } else {
+      store.dispatch(stopLoading());
     }
   }, []);
 
