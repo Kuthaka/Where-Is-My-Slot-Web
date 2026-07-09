@@ -1,98 +1,164 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Where Is My Slot — Backend v2
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A clean, dependency-injection-free Express + TypeScript backend using **Clean Architecture** (Domain → Application → Infrastructure → Presentation).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js + TypeScript |
+| Framework | Express.js |
+| Database | MongoDB via Mongoose |
+| Auth | JWT (jsonwebtoken) |
+| Email | Nodemailer (SMTP) |
+| File Upload | Multer + Cloudinary |
+| Validation | Native + Zod (ready to use) |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Project Structure
 
-```bash
-$ npm install
+```
+backend-v2/
+└── src/
+    ├── index.ts                  # Entry point (bootstrap)
+    ├── app.ts                    # App factory + DI composition root
+    │
+    ├── shared/                   # Cross-cutting concerns
+    │   ├── enums/
+    │   │   ├── user-role.enum.ts
+    │   │   └── status-code.enum.ts
+    │   ├── constants/
+    │   │   └── error-messages.ts
+    │   ├── errors/
+    │   │   └── app-error.ts      # Typed error classes
+    │   └── middleware/
+    │       ├── auth.middleware.ts       # JWT + role guard
+    │       ├── error-handler.middleware.ts
+    │       └── response.middleware.ts  # sendSuccess/sendCreated helpers
+    │
+    ├── infrastructure/           # External services & DB
+    │   ├── database/
+    │   │   ├── connection.ts
+    │   │   └── models/           # Mongoose schemas
+    │   ├── repositories/         # Mongoose repository implementations
+    │   └── services/
+    │       ├── email.service.ts
+    │       └── cloudinary.service.ts
+    │
+    └── modules/
+        ├── auth/
+        │   ├── domain/           # OTP entity + repo interface
+        │   ├── application/      # Use cases: sendOtp, verifyOtp, login, register, setPassword
+        │   └── presentation/     # auth.router.ts
+        │
+        ├── users/
+        │   └── domain/           # User entity + repo interface
+        │
+        ├── businesses/
+        │   ├── domain/           # Business entity + repo interface
+        │   ├── application/      # Use cases: onboard, update, adminManage
+        │   └── presentation/     # business.router.ts
+        │
+        └── posts/
+            ├── domain/           # Post entity + repo interface
+            ├── application/      # Use case: createPost
+            └── presentation/     # posts.router.ts, flash-deals.router.ts
 ```
 
-## Compile and run the project
+---
+
+## API Routes
+
+All routes are prefixed with `/api/v1`.
+
+### Auth (`/api/v1/auth`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/send-otp` | — | Send OTP to email |
+| POST | `/verify-otp` | — | Verify OTP and get token |
+| POST | `/login` | — | Login with email + password |
+| POST | `/register` | — | Register new USER account |
+| GET | `/check-availability` | — | Check username/email availability |
+| POST | `/set-password` | JWT | Change or set password |
+| GET | `/me` | JWT | Get current user |
+
+### Businesses (`/api/v1/businesses`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/explore` | — | Public business listing with cursor pagination |
+| GET | `/me` | JWT (BUSINESS) | Get my business |
+| PATCH | `/me` | JWT (BUSINESS) | Update my business |
+| POST | `/onboard` | JWT (BUSINESS) | Create business profile |
+| POST | `/upload-image` | JWT (BUSINESS) | Upload image to Cloudinary |
+| GET | `/` | JWT (SUPER_ADMIN) | Get all businesses |
+| POST | `/admin/add` | JWT (SUPER_ADMIN) | Admin create business |
+| POST | `/:id/approve` | JWT (SUPER_ADMIN) | Approve business |
+| POST | `/:id/reject` | JWT (SUPER_ADMIN) | Reject business |
+
+### Posts (`/api/v1/posts`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/` | — | Get posts (cursor pagination) |
+| POST | `/` | JWT | Create post |
+| POST | `/:id` | JWT | Update post |
+| DELETE | `/:id` | JWT | Delete post |
+| POST | `/:id/like` | JWT | Toggle like |
+| POST | `/:id/comments` | JWT | Add comment |
+| GET | `/:id/comments` | — | Get comments |
+| DELETE | `/comments/:id` | JWT | Delete comment |
+
+### Flash Deals (`/api/v1/flash-deals`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/` | — | Get active flash deals |
+| POST | `/` | JWT | Create flash deal (24h) |
+
+### Misc
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/health` | Health check |
+| POST | `/api/v1/seed` | Seed test data |
+
+---
+
+## Getting Started
 
 ```bash
-# development
-$ npm run start
+# 1. Install dependencies
+npm install
 
-# watch mode
-$ npm run start:dev
+# 2. Copy env and fill in values (MongoDB Atlas URI, SMTP, Cloudinary)
+cp .env.example .env
 
-# production mode
-$ npm run start:prod
+# 3. Start dev server (hot reload)
+npm run dev
+
+# 4. Build for production
+npm run build
+npm start
 ```
 
-## Run tests
+> **Note:** If MongoDB Atlas connection fails, add your current IP to the Atlas IP Access List at https://cloud.mongodb.com → Network Access.
 
-```bash
-# unit tests
-$ npm run test
+---
 
-# e2e tests
-$ npm run test:e2e
+## Clean Architecture Principles Applied
 
-# test coverage
-$ npm run test:cov
-```
+1. **Domain Layer** — Pure TypeScript entities and repository interfaces. Zero framework or DB dependencies.
+2. **Application Layer** — Use cases that orchestrate domain logic. Only import domain interfaces, not implementations.
+3. **Infrastructure Layer** — Mongoose models and repository implementations. Email and Cloudinary services.
+4. **Presentation Layer** — Express routers. Receive HTTP, call use cases, return responses.
+5. **Composition Root** — `app.ts` is the only place where concrete implementations are wired to interfaces. No DI framework needed.
 
-## Deployment
+### Key Design Decisions
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **No DI framework** — Dependencies are passed as constructor arguments, keeping things explicit and easy to test.
+- **Typed errors** — `AppError` hierarchy (`BadRequestError`, `NotFoundError`, etc.) with proper HTTP status codes.
+- **Response wrapper** — All API responses follow `{ success, statusCode, message, data }` format via `sendSuccess()`.
+- **Role guard factory** — `requireRoles(...roles)` creates a middleware closure — simple and composable.

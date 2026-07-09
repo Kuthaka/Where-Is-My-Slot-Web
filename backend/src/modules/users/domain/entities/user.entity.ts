@@ -1,3 +1,5 @@
+// ─── User Domain Entity ────────────────────────────────────────────────────────
+
 export class User {
   constructor(
     public readonly id: string,
@@ -8,7 +10,7 @@ export class User {
     public isPasswordSet: boolean,
     public role: string,
     public isActive: boolean,
-    public createdAt: Date,
-    public updatedAt: Date,
+    public readonly createdAt: Date,
+    public readonly updatedAt: Date
   ) {}
 }

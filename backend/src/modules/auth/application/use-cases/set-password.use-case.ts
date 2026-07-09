@@ -1,38 +1,30 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
-import { USER_REPOSITORY, IUserRepository } from '../../../users/domain/repositories/user.repository.interface';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
+import { IUserRepository } from '../../../users/domain/repositories/user.repository.interface';
+import { BadRequestError, NotFoundError } from '../../../../shared/errors/app-error';
 
-@Injectable()
+// ─── Set Password Use Case ─────────────────────────────────────────────────────
+
 export class SetPasswordUseCase {
-  constructor(
-    @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
-  ) {}
+  constructor(private readonly userRepository: IUserRepository) {}
 
-  async execute(userId: string, newPasswordPlain: string, oldPasswordPlain?: string) {
+  async execute(
+    userId: string,
+    newPasswordPlain: string,
+    oldPasswordPlain?: string
+  ): Promise<{ success: boolean; message: string }> {
     const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new NotFoundError('User not found');
 
     if (user.isPasswordSet) {
       if (!oldPasswordPlain) {
-        throw new BadRequestException('Old password is required to change password');
+        throw new BadRequestError('Old password is required to change password');
       }
-      const isPasswordValid = await bcrypt.compare(oldPasswordPlain, user.passwordHash);
-      if (!isPasswordValid) {
-        throw new BadRequestException('Invalid old password');
-      }
+      const isValid = await bcrypt.compare(oldPasswordPlain, user.passwordHash);
+      if (!isValid) throw new BadRequestError('Invalid old password');
     }
 
     const hashed = await bcrypt.hash(newPasswordPlain, 10);
-    user.passwordHash = hashed;
-    user.isPasswordSet = true;
-    
-    await this.userRepository.update(user.id, {
-      passwordHash: hashed,
-      isPasswordSet: true,
-    });
+    await this.userRepository.update(userId, { passwordHash: hashed, isPasswordSet: true });
 
     return { success: true, message: 'Password updated successfully' };
   }

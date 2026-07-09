@@ -1,38 +1,28 @@
-import { Injectable, Inject, Optional } from '@nestjs/common';
-import { IPostRepository, POST_REPOSITORY } from '../../domain/repositories/post.repository.interface';
+import { IPostRepository } from '../../domain/repositories/post.repository.interface';
 import { Post } from '../../domain/entities/post.entity';
+import { v4 as uuidv4 } from 'uuid';
 
-@Injectable()
+// ─── Create Post Use Case ──────────────────────────────────────────────────────
+
 export class CreatePostUseCase {
-  constructor(
-    @Inject(POST_REPOSITORY) private postRepo: IPostRepository,
-    @Optional() @Inject('Cloudinary') private cloudinary: any
-  ) {}
+  constructor(private readonly postRepository: IPostRepository) {}
 
-  async execute(businessId: string, data: any) {
-    let imageUrl = null;
-
-    if (data.image) {
-      if (data.image.startsWith('http')) {
-        imageUrl = data.image; // Already a URL
-      } else {
-        // Base64 upload
-        if (this.cloudinary) {
-          const uploadResponse = await this.cloudinary.uploader.upload(data.image, {
-            folder: 'posts',
-          });
-          imageUrl = uploadResponse.secure_url;
-        }
-      }
-    }
-
+  async execute(
+    businessId: string,
+    data: { text: string; image?: string; tags?: string[]; location?: string }
+  ): Promise<Post> {
     const post = new Post({
-      text: data.text || '',
-      image: imageUrl,
-      tags: data.tags || [],
-      location: data.location || null,
+      id: uuidv4(),
+      text: data.text,
+      image: data.image ?? null,
+      tags: data.tags ?? [],
+      location: data.location ?? null,
+      views: 0,
       businessId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
-    return this.postRepo.create(post);
+
+    return this.postRepository.create(post);
   }
 }

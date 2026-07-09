@@ -1,13 +1,20 @@
 import { Post } from '../entities/post.entity';
-export const POST_REPOSITORY = Symbol('POST_REPOSITORY');
+
+// ─── Post Repository Interface ─────────────────────────────────────────────────
+
 export interface IPostRepository {
   create(post: Post): Promise<Post>;
-  findAll(cursor?: string, limit?: number, businessId?: string, userId?: string): Promise<{posts: any[], nextCursor: string | null}>;
-  findById(id: string): Promise<any | null>;
-  update(id: string, text: string, image?: string): Promise<any>;
+  findById(id: string): Promise<Post | null>;
+  findAll(
+    cursor?: string,
+    limit?: number,
+    businessId?: string,
+    userId?: string
+  ): Promise<{ posts: unknown[]; nextCursor: string | null }>;
+  update(id: string, text?: string, image?: string): Promise<Post>;
   delete(id: string): Promise<void>;
   toggleLike(postId: string, userId: string): Promise<boolean>;
-  addComment(postId: string, userId: string, text: string): Promise<any>;
+  addComment(postId: string, userId: string, text: string): Promise<unknown>;
   deleteComment(commentId: string, userId: string): Promise<boolean>;
-  getComments(postId: string): Promise<any[]>;
+  getComments(postId: string): Promise<unknown[]>;
 }

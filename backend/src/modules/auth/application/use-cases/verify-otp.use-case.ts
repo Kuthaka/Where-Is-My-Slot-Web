@@ -1,40 +1,36 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { IOtpRepository, OTP_REPOSITORY } from '../../domain/repositories/otp.repository.interface';
-import { IUserRepository, USER_REPOSITORY } from '../../../users/domain/repositories/user.repository.interface';
-import { UserRole } from '../../../../shared/enums/user-role.enum';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import { IUserRepository } from '../../../users/domain/repositories/user.repository.interface';
+import { IOtpRepository } from '../../domain/repositories/otp.repository.interface';
 import { User } from '../../../users/domain/entities/user.entity';
-import * as bcrypt from 'bcrypt';
+import { UserRole } from '../../../../shared/enums/user-role.enum';
+import { BadRequestError } from '../../../../shared/errors/app-error';
 import { v4 as uuidv4 } from 'uuid';
 
-@Injectable()
+// ─── Verify OTP Use Case ───────────────────────────────────────────────────────
+
 export class VerifyOtpUseCase {
   constructor(
-    @Inject(OTP_REPOSITORY)
     private readonly otpRepository: IOtpRepository,
-    @Inject(USER_REPOSITORY)
     private readonly userRepository: IUserRepository,
-    private readonly jwtService: JwtService,
   ) {}
 
-  async execute(email: string, otp: string) {
-    // Bypassing OTP check for smooth testing
-    // const record = await this.otpRepository.findLatestValidOtp(email, otp);
-
+  async execute(email: string, otpValue: string): Promise<{ accessToken: string; user: User }> {
+    // Uncomment for strict OTP check in production:
+    // const record = await this.otpRepository.findLatestValidOtp(email, otpValue);
     // if (!record || record.expiresAt < new Date()) {
-    //   throw new BadRequestException('Invalid or expired OTP');
+    //   throw new BadRequestError('Invalid or expired OTP');
     // }
-
     // await this.otpRepository.delete(record.id);
 
     let user = await this.userRepository.findByEmail(email);
 
     if (!user) {
       const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
-      user = new User(
+      const newUser = new User(
         uuidv4(),
         email.split('@')[0],
-        null, // username
+        null,
         email,
         randomPassword,
         false,
@@ -43,17 +39,15 @@ export class VerifyOtpUseCase {
         new Date(),
         new Date()
       );
-      user = await this.userRepository.create(user);
-    } else {
-      if (user.role === UserRole.USER) {
-        user = await this.userRepository.update(user.id, { role: UserRole.BUSINESS });
-      }
+      user = await this.userRepository.create(newUser);
+    } else if (user.role === UserRole.USER) {
+      user = await this.userRepository.update(user.id, { role: UserRole.BUSINESS });
     }
 
+    const secret = process.env.JWT_ACCESS_SECRET as string;
     const payload = { sub: user.id, email: user.email, role: user.role };
-    return {
-      accessToken: this.jwtService.sign(payload),
-      user,
-    };
+    const accessToken = jwt.sign(payload, secret, { expiresIn: '7d' });
+
+    return { accessToken, user };
   }
 }
