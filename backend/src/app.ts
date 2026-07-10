@@ -6,31 +6,37 @@ import { requestLogger } from './shared/middleware/response.middleware';
 import { globalErrorHandler } from './shared/middleware/error-handler.middleware';
 
 // ─── Infrastructure ────────────────────────────────────────────────────────────
-import { MongooseUserRepository } from './infrastructure/repositories/mongoose-user.repository';
-import { MongooseBusinessRepository } from './infrastructure/repositories/mongoose-business.repository';
-import { MongoosePostRepository } from './infrastructure/repositories/mongoose-post.repository';
-import { MongooseOtpRepository } from './infrastructure/repositories/mongoose-otp.repository';
+import { MongooseUserRepository } from './modules/users/repositories/implementations/user.repository';
+import { MongooseBusinessRepository } from './modules/businesses/repositories/implementations/business.repository';
+import { MongoosePostRepository } from './modules/posts/repositories/implementations/post.repository';
+import { MongooseOtpRepository } from './modules/auth/repositories/implementations/otp.repository';
 
-// ─── Auth use cases ────────────────────────────────────────────────────────────
-import { SendOtpUseCase } from './modules/auth/application/use-cases/send-otp.use-case';
-import { VerifyOtpUseCase } from './modules/auth/application/use-cases/verify-otp.use-case';
-import { LoginUseCase } from './modules/auth/application/use-cases/login.use-case';
-import { RegisterUserUseCase } from './modules/auth/application/use-cases/register-user.use-case';
-import { SetPasswordUseCase } from './modules/auth/application/use-cases/set-password.use-case';
+// ─── Auth Module ───────────────────────────────────────────────────────────────
+import { AuthService } from './modules/auth/services/implementations/auth.service';
+import { AuthController } from './modules/auth/controllers/implementations/auth.controller';
 
-// ─── Business use cases ────────────────────────────────────────────────────────
-import { OnboardBusinessUseCase } from './modules/businesses/application/use-cases/onboard-business.use-case';
-import { UpdateBusinessUseCase } from './modules/businesses/application/use-cases/update-business.use-case';
-import { AdminManageBusinessUseCase } from './modules/businesses/application/use-cases/admin-manage-business.use-case';
+// ─── Businesses Module ─────────────────────────────────────────────────────────
+import { BusinessesService } from './modules/businesses/services/implementations/businesses.service';
+import { BusinessesController } from './modules/businesses/controllers/implementations/businesses.controller';
 
-// ─── Post use cases ────────────────────────────────────────────────────────────
-import { CreatePostUseCase } from './modules/posts/application/use-cases/create-post.use-case';
+// ─── Admin Module ──────────────────────────────────────────────────────────────
+import { AdminService } from './modules/admin/services/implementations/admin.service';
+import { AdminController } from './modules/admin/controllers/implementations/admin.controller';
+
+// ─── Posts Module ──────────────────────────────────────────────────────────────
+import { PostsService } from './modules/posts/services/implementations/posts.service';
+import { PostsController } from './modules/posts/controllers/implementations/posts.controller';
+import { FlashDealsController } from './modules/posts/controllers/implementations/flash-deals.controller';
 
 // ─── Routers ───────────────────────────────────────────────────────────────────
-import { createAuthRouter } from './modules/auth/presentation/auth.router';
-import { createBusinessRouter } from './modules/businesses/presentation/business.router';
-import { createPostsRouter } from './modules/posts/presentation/posts.router';
-import { createFlashDealsRouter } from './modules/posts/presentation/flash-deals.router';
+import {
+  createAuthRouter,
+  createBusinessesRouter,
+  createAdminRouter,
+  createPostsRouter,
+  createFlashDealsRouter,
+} from './routes';
+
 
 // ─── App Factory ───────────────────────────────────────────────────────────────
 
@@ -49,20 +55,22 @@ export function createApp(): Application {
   const postRepository = new MongoosePostRepository();
   const otpRepository = new MongooseOtpRepository();
 
-  // ── Auth Use Cases ───────────────────────────────────────────────────────────
-  const sendOtpUseCase = new SendOtpUseCase(otpRepository);
-  const verifyOtpUseCase = new VerifyOtpUseCase(otpRepository, userRepository);
-  const loginUseCase = new LoginUseCase(userRepository);
-  const registerUserUseCase = new RegisterUserUseCase(userRepository);
-  const setPasswordUseCase = new SetPasswordUseCase(userRepository);
+  // ── Auth Module ──────────────────────────────────────────────────────────────
+  const authService = new AuthService(userRepository, otpRepository);
+  const authController = new AuthController(authService, userRepository);
 
-  // ── Business Use Cases ───────────────────────────────────────────────────────
-  const onboardBusinessUseCase = new OnboardBusinessUseCase(businessRepository);
-  const updateBusinessUseCase = new UpdateBusinessUseCase(businessRepository);
-  const adminManageBusinessUseCase = new AdminManageBusinessUseCase(businessRepository);
+  // ── Businesses Module ────────────────────────────────────────────────────────
+  const businessesService = new BusinessesService(businessRepository);
+  const businessesController = new BusinessesController(businessesService, businessRepository);
 
-  // ── Post Use Cases ───────────────────────────────────────────────────────────
-  const createPostUseCase = new CreatePostUseCase(postRepository);
+  // ── Admin Module ─────────────────────────────────────────────────────────────
+  const adminService = new AdminService(businessRepository);
+  const adminController = new AdminController(adminService);
+
+  // ── Posts Module ─────────────────────────────────────────────────────────────
+  const postsService = new PostsService(postRepository);
+  const postsController = new PostsController(postsService, postRepository);
+  const flashDealsController = new FlashDealsController();
 
   // ── Health Check ─────────────────────────────────────────────────────────────
   app.get('/api/v1/health', (_req, res) => {
@@ -77,9 +85,9 @@ export function createApp(): Application {
   app.post('/api/v1/seed', async (_req, res, next) => {
     try {
       const bcrypt = await import('bcrypt');
-      const { UserModel } = await import('./infrastructure/database/models/user.model');
-      const { BusinessModel } = await import('./infrastructure/database/models/business.model');
-      const { CategoryModel } = await import('./infrastructure/database/models/misc.model');
+      const { UserModel } = await import('./models/user.model');
+      const { BusinessModel } = await import('./models/business.model');
+      const { CategoryModel } = await import('./models/misc.model');
 
       const hashedPassword = await bcrypt.default.hash('password123', 10);
 
@@ -116,30 +124,13 @@ export function createApp(): Application {
   });
 
   // ── Module Routes ─────────────────────────────────────────────────────────────
-  app.use(
-    '/api/v1/auth',
-    createAuthRouter(
-      userRepository,
-      sendOtpUseCase,
-      verifyOtpUseCase,
-      loginUseCase,
-      registerUserUseCase,
-      setPasswordUseCase
-    )
-  );
+  app.use('/api/v1/auth', createAuthRouter(authController));
 
-  app.use(
-    '/api/v1/businesses',
-    createBusinessRouter(
-      businessRepository,
-      onboardBusinessUseCase,
-      updateBusinessUseCase,
-      adminManageBusinessUseCase
-    )
-  );
+  app.use('/api/v1/businesses', createBusinessesRouter(businessesController));
+  app.use('/api/v1/admin', createAdminRouter(adminController));
 
-  app.use('/api/v1/posts', createPostsRouter(postRepository, createPostUseCase));
-  app.use('/api/v1/flash-deals', createFlashDealsRouter());
+  app.use('/api/v1/posts', createPostsRouter(postsController));
+  app.use('/api/v1/flash-deals', createFlashDealsRouter(flashDealsController));
 
   // ── 404 Handler ───────────────────────────────────────────────────────────────
   app.use((_req, res) => {
