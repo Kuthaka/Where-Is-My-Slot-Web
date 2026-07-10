@@ -9,10 +9,14 @@ import { BusinessModel } from '../../../../models/business.model';
 import { uploadBuffer } from '../../../../core/services/cloudinary.service';
 import { BadRequestError } from '../../../../shared/errors/app-error';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class BusinessesController implements IBusinessesController {
   constructor(
-    private readonly businessesService: IBusinessesService,
-    private readonly businessRepository: IBusinessRepository
+    @inject(TYPES.BusinessesService) private readonly businessesService: IBusinessesService,
+    @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository
   ) {}
 
   async exploreBusinesses(req: Request, res: Response, next: NextFunction): Promise<void> {

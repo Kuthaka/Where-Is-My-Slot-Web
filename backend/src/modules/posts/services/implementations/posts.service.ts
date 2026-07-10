@@ -3,8 +3,14 @@ import { IPostRepository } from '../../repositories/interfaces/post.repository.i
 import { Post } from '../../entities/post.entity';
 import { v4 as uuidv4 } from 'uuid';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class PostsService implements IPostsService {
-  constructor(private readonly postRepository: IPostRepository) {}
+  constructor(
+    @inject(TYPES.PostRepository) private readonly postRepository: IPostRepository
+  ) {}
 
   async createPost(
     businessId: string,

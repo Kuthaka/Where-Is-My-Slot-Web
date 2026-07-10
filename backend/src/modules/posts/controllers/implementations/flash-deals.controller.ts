@@ -7,6 +7,9 @@ import { BusinessModel } from '../../../../models/business.model';
 import { FlashDealModel } from '../../../../models/misc.model';
 import { NotFoundError } from '../../../../shared/errors/app-error';
 
+import { injectable } from 'inversify';
+
+@injectable()
 export class FlashDealsController implements IFlashDealsController {
   async getFlashDeals(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

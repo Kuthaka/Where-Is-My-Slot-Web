@@ -2,6 +2,9 @@ import { IOtpRepository } from '../interfaces/otp.repository.interface';
 import { Otp } from '../../entities/otp.entity';
 import { OtpModel, IOtpDocument } from '../../../../models/misc.model';
 
+import { injectable } from 'inversify';
+
+@injectable()
 export class MongooseOtpRepository implements IOtpRepository {
   async create(otp: Otp): Promise<Otp> {
     const created = await OtpModel.create({

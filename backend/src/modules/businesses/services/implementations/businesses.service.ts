@@ -4,8 +4,14 @@ import { Business } from '../../entities/business.entity';
 import { NotFoundError } from '../../../../shared/errors/app-error';
 import { v4 as uuidv4 } from 'uuid';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class BusinessesService implements IBusinessesService {
-  constructor(private readonly businessRepository: IBusinessRepository) {}
+  constructor(
+    @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository
+  ) {}
 
   async onboardBusiness(data: Record<string, unknown>): Promise<Business> {
     const business = new Business({

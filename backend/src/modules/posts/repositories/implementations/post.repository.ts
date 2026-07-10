@@ -4,6 +4,9 @@ import { PostModel, LikeModel, CommentModel, IPostDocument } from '../../../../m
 
 // ─── Mongoose Post Repository ──────────────────────────────────────────────────
 
+import { injectable } from 'inversify';
+
+@injectable()
 export class MongoosePostRepository implements IPostRepository {
   async create(postEntity: Post): Promise<Post> {
     const created = await PostModel.create({

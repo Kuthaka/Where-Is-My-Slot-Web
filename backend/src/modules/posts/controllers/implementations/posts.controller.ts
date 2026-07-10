@@ -7,10 +7,14 @@ import { sendSuccess, sendCreated } from '../../../../shared/middleware/response
 import { BusinessModel } from '../../../../models/business.model';
 import { NotFoundError, ForbiddenError } from '../../../../shared/errors/app-error';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class PostsController implements IPostsController {
   constructor(
-    private readonly postsService: IPostsService,
-    private readonly postRepository: IPostRepository
+    @inject(TYPES.PostsService) private readonly postsService: IPostsService,
+    @inject(TYPES.PostRepository) private readonly postRepository: IPostRepository
   ) {}
 
   async getPosts(req: Request, res: Response, next: NextFunction): Promise<void> {

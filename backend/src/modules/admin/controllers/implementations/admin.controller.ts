@@ -3,8 +3,14 @@ import { IAdminController } from '../interfaces/admin.controller.interface';
 import { IAdminService } from '../../services/interfaces/admin.service.interface';
 import { sendSuccess, sendCreated } from '../../../../shared/middleware/response.middleware';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class AdminController implements IAdminController {
-  constructor(private readonly adminService: IAdminService) {}
+  constructor(
+    @inject(TYPES.AdminService) private readonly adminService: IAdminService
+  ) {}
 
   async getAllBusinesses(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

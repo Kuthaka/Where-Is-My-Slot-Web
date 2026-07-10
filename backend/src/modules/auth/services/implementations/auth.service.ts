@@ -11,10 +11,14 @@ import { UserRole } from '../../../../shared/enums/user-role.enum';
 import { sendOtpEmail } from '../../../../core/services/email.service';
 import { UnauthorizedError, ConflictError, BadRequestError, NotFoundError } from '../../../../shared/errors/app-error';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class AuthService implements IAuthService {
   constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly otpRepository: IOtpRepository
+    @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository,
+    @inject(TYPES.OtpRepository) private readonly otpRepository: IOtpRepository
   ) {}
 
   async sendOtp(email: string): Promise<{ success: boolean; message: string }> {

@@ -4,6 +4,9 @@ import { UserModel, IUserDocument } from '../../../../models/user.model';
 
 // ─── Mongoose User Repository ──────────────────────────────────────────────────
 
+import { injectable } from 'inversify';
+
+@injectable()
 export class MongooseUserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     const doc = await UserModel.findById(id).exec();

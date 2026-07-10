@@ -4,6 +4,9 @@ import { BusinessModel, IBusinessDocument } from '../../../../models/business.mo
 
 // ─── Mongoose Business Repository ─────────────────────────────────────────────
 
+import { injectable } from 'inversify';
+
+@injectable()
 export class MongooseBusinessRepository implements IBusinessRepository {
   async findById(id: string): Promise<Business | null> {
     const doc = await BusinessModel.findById(id).exec();

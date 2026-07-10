@@ -5,10 +5,14 @@ import { sendSuccess, sendCreated } from '../../../../shared/middleware/response
 import { IUserRepository } from '../../../users/repositories/interfaces/user.repository.interface';
 import { AuthenticatedRequest } from '../../../../shared/middleware/auth.middleware';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class AuthController implements IAuthController {
   constructor(
-    private readonly authService: IAuthService,
-    private readonly userRepository: IUserRepository
+    @inject(TYPES.AuthService) private readonly authService: IAuthService,
+    @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository
   ) {}
 
   async sendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {

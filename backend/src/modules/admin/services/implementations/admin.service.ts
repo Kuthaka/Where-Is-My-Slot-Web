@@ -4,8 +4,14 @@ import { Business } from '../../../businesses/entities/business.entity';
 import { NotFoundError } from '../../../../shared/errors/app-error';
 import { v4 as uuidv4 } from 'uuid';
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../../../core/container/types';
+
+@injectable()
 export class AdminService implements IAdminService {
-  constructor(private readonly businessRepository: IBusinessRepository) {}
+  constructor(
+    @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository
+  ) {}
 
   async getAllBusinesses(): Promise<Business[]> {
     return this.businessRepository.findAll();

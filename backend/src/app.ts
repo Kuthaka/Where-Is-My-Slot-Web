@@ -5,28 +5,15 @@ import cors from 'cors';
 import { requestLogger } from './shared/middleware/response.middleware';
 import { globalErrorHandler } from './shared/middleware/error-handler.middleware';
 
-// ─── Infrastructure ────────────────────────────────────────────────────────────
-import { MongooseUserRepository } from './modules/users/repositories/implementations/user.repository';
-import { MongooseBusinessRepository } from './modules/businesses/repositories/implementations/business.repository';
-import { MongoosePostRepository } from './modules/posts/repositories/implementations/post.repository';
-import { MongooseOtpRepository } from './modules/auth/repositories/implementations/otp.repository';
+import { IAuthController } from './modules/auth/controllers/interfaces/auth.controller.interface';
+import { IBusinessesController } from './modules/businesses/controllers/interfaces/businesses.controller.interface';
+import { IAdminController } from './modules/admin/controllers/interfaces/admin.controller.interface';
+import { IPostsController } from './modules/posts/controllers/interfaces/posts.controller.interface';
+import { IFlashDealsController } from './modules/posts/controllers/interfaces/flash-deals.controller.interface';
 
-// ─── Auth Module ───────────────────────────────────────────────────────────────
-import { AuthService } from './modules/auth/services/implementations/auth.service';
-import { AuthController } from './modules/auth/controllers/implementations/auth.controller';
-
-// ─── Businesses Module ─────────────────────────────────────────────────────────
-import { BusinessesService } from './modules/businesses/services/implementations/businesses.service';
-import { BusinessesController } from './modules/businesses/controllers/implementations/businesses.controller';
-
-// ─── Admin Module ──────────────────────────────────────────────────────────────
-import { AdminService } from './modules/admin/services/implementations/admin.service';
-import { AdminController } from './modules/admin/controllers/implementations/admin.controller';
-
-// ─── Posts Module ──────────────────────────────────────────────────────────────
-import { PostsService } from './modules/posts/services/implementations/posts.service';
-import { PostsController } from './modules/posts/controllers/implementations/posts.controller';
-import { FlashDealsController } from './modules/posts/controllers/implementations/flash-deals.controller';
+// ─── Container ─────────────────────────────────────────────────────────────────
+import { container } from './core/container/inversify';
+import { TYPES } from './core/container/types';
 
 // ─── Routers ───────────────────────────────────────────────────────────────────
 import {
@@ -49,28 +36,12 @@ export function createApp(): Application {
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(requestLogger);
 
-  // ── Repositories (Infrastructure Layer) ─────────────────────────────────────
-  const userRepository = new MongooseUserRepository();
-  const businessRepository = new MongooseBusinessRepository();
-  const postRepository = new MongoosePostRepository();
-  const otpRepository = new MongooseOtpRepository();
-
-  // ── Auth Module ──────────────────────────────────────────────────────────────
-  const authService = new AuthService(userRepository, otpRepository);
-  const authController = new AuthController(authService, userRepository);
-
-  // ── Businesses Module ────────────────────────────────────────────────────────
-  const businessesService = new BusinessesService(businessRepository);
-  const businessesController = new BusinessesController(businessesService, businessRepository);
-
-  // ── Admin Module ─────────────────────────────────────────────────────────────
-  const adminService = new AdminService(businessRepository);
-  const adminController = new AdminController(adminService);
-
-  // ── Posts Module ─────────────────────────────────────────────────────────────
-  const postsService = new PostsService(postRepository);
-  const postsController = new PostsController(postsService, postRepository);
-  const flashDealsController = new FlashDealsController();
+  // ── Retrieve Controllers from Container ──────────────────────────────────────
+  const authController = container.get<IAuthController>(TYPES.AuthController);
+  const businessesController = container.get<IBusinessesController>(TYPES.BusinessesController);
+  const adminController = container.get<IAdminController>(TYPES.AdminController);
+  const postsController = container.get<IPostsController>(TYPES.PostsController);
+  const flashDealsController = container.get<IFlashDealsController>(TYPES.FlashDealsController);
 
   // ── Health Check ─────────────────────────────────────────────────────────────
   app.get('/api/v1/health', (_req, res) => {
