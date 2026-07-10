@@ -6,7 +6,7 @@ import { IBusinessRepository } from '../../repositories/interfaces/business.repo
 import { AuthenticatedRequest } from '../../../../shared/middleware/auth.middleware';
 import { sendSuccess, sendCreated } from '../../../../shared/middleware/response.middleware';
 import { BusinessModel } from '../../../../models/business.model';
-import { uploadBuffer } from '../../../../infrastructure/services/cloudinary.service';
+import { uploadBuffer } from '../../../../core/services/cloudinary.service';
 import { BadRequestError } from '../../../../shared/errors/app-error';
 
 export class BusinessesController implements IBusinessesController {

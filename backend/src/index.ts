@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createApp } from './app';
-import { connectDatabase } from './infrastructure/database/connection';
+import connectDB from './config/db';
 
 // ─── Bootstrap ─────────────────────────────────────────────────────────────────
 
@@ -8,7 +8,7 @@ const PORT = parseInt(process.env.PORT ?? '5001', 10);
 
 async function bootstrap(): Promise<void> {
   try {
-    await connectDatabase();
+    await connectDB();
 
     const app = createApp();
 

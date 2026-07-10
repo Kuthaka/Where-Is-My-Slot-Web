@@ -8,7 +8,7 @@ import { IUserRepository } from '../../../users/repositories/interfaces/user.rep
 import { Otp } from '../../entities/otp.entity';
 import { User } from '../../../users/entities/user.entity';
 import { UserRole } from '../../../../shared/enums/user-role.enum';
-import { sendOtpEmail } from '../../../../infrastructure/services/email.service';
+import { sendOtpEmail } from '../../../../core/services/email.service';
 import { UnauthorizedError, ConflictError, BadRequestError, NotFoundError } from '../../../../shared/errors/app-error';
 
 export class AuthService implements IAuthService {
