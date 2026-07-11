@@ -42,10 +42,10 @@ export default function BusinessSuccessPage() {
                 <li className="flex gap-2"><span className="text-green-500 font-bold">✓</span> You can start adding exclusive offers immediately!</li>
               </ul>
 
-              <Link href="/business/login" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-yellow-400/30 text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-500 transition-colors group">
-                Login to Merchant Dashboard
+              <a href="/business/dashboard" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-yellow-400/30 text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-500 transition-colors group">
+                Go to Merchant Dashboard
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              </a>
             </div>
 
             <Link href="/" className="text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">

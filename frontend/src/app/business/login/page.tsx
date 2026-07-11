@@ -28,10 +28,21 @@ export default function BusinessLoginPage() {
       if (!res.ok) {
         throw new Error(data.message?.message || data.message || "Invalid credentials");
       }
-      localStorage.setItem("token", data.data.accessToken);
-      document.cookie = `token=${data.data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
+      const token = data.data.accessToken;
+
+      // Validate that a business actually exists for this user
+      const bizRes = await fetch("http://localhost:5000/api/v1/businesses/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const bizData = await bizRes.json();
+      if (!bizData.data) {
+        throw new Error("No business exists with this email");
+      }
+
+      localStorage.setItem("token", token);
+      document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Strict`;
       toast.success("Successfully logged in");
-      router.push("/business/dashboard");
+      window.location.href = "/business/dashboard";
     } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -56,11 +67,22 @@ export default function BusinessLoginPage() {
       if (!res.ok) throw new Error("Failed to authenticate");
 
       const data = await res.json();
-      localStorage.setItem("token", data.data?.accessToken || data.accessToken);
-      document.cookie = `token=${data.data?.accessToken || data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
+      const token = data.data?.accessToken || data.data?.message || data.accessToken || data.message;
+
+      // Validate that a business actually exists for this user
+      const bizRes = await fetch("http://localhost:5000/api/v1/businesses/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const bizData = await bizRes.json();
+      if (!bizData.data) {
+        throw new Error("No business exists with this email");
+      }
+
+      localStorage.setItem("token", token);
+      document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Strict`;
 
       toast.success("Successfully authenticated");
-      router.push("/business/dashboard");
+      window.location.href = "/business/dashboard";
     } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message);
