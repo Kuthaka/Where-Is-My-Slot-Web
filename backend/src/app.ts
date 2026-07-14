@@ -25,7 +25,6 @@ import {
   createFlashDealsRouter,
 } from './routes';
 
-
 // ─── App Factory ───────────────────────────────────────────────────────────────
 
 export function createApp(): Application {
