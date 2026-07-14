@@ -47,15 +47,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const activeTab = getActiveTab();
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/business/login");
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
+    // Fetch business using the specific businessToken
+    const token = localStorage.getItem("businessToken") || localStorage.getItem("token");
     if (!token) {
       setLoading(false);
+      router.push("/business/login");
       return;
     }
     
@@ -77,6 +73,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   const handleLogout = () => {
+    localStorage.removeItem("businessToken");
+    document.cookie = "businessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     dispatch(reduxLogout());
     router.push("/business/login");
   };
@@ -138,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     Get started by creating your premium business profile to manage bookings, create flash deals, and connect with your local community.
                   </p>
                   <button 
-                    onClick={() => router.push("/business/register/onboarding")}
+                    onClick={() => router.push("/business/register")}
                     className="px-8 py-3.5 bg-yellow-400 hover:bg-yellow-500 transition-colors text-black rounded-xl font-bold text-lg shadow-lg shadow-yellow-400/20"
                   >
                     List Your Business Now

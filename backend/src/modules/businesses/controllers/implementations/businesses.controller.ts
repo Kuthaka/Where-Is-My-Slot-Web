@@ -4,6 +4,7 @@ import { IBusinessesController } from '../interfaces/businesses.controller.inter
 import { IBusinessesService } from '../../services/interfaces/businesses.service.interface';
 import { IBusinessRepository } from '../../repositories/interfaces/business.repository.interface';
 import { IOtpRepository } from '../../../auth/repositories/interfaces/otp.repository.interface';
+import { IUserRepository } from '../../../users/repositories/interfaces/user.repository.interface';
 import { AuthenticatedRequest } from '../../../../shared/middleware/auth.middleware';
 import { sendSuccess, sendCreated } from '../../../../shared/middleware/response.middleware';
 import { BusinessModel } from '../../../../models/business.model';
@@ -11,6 +12,8 @@ import { uploadBuffer } from '../../../../core/services/cloudinary.service';
 import { sendOtpEmail } from '../../../../core/services/email.service';
 import { BadRequestError, UnauthorizedError, NotFoundError } from '../../../../shared/errors/app-error';
 import { Otp } from '../../../auth/entities/otp.entity';
+import { User } from '../../../users/entities/user.entity';
+import { UserRole } from '../../../../shared/enums/user-role.enum';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,6 +28,7 @@ export class BusinessesController implements IBusinessesController {
     @inject(TYPES.BusinessesService) private readonly businessesService: IBusinessesService,
     @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository,
     @inject(TYPES.OtpRepository) private readonly otpRepository: IOtpRepository,
+    @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository,
   ) {}
 
   // ─── Public: Explore ──────────────────────────────────────────────────────────
@@ -123,79 +127,68 @@ export class BusinessesController implements IBusinessesController {
   }
 
   // ─── Public: Onboard (Register) ───────────────────────────────────────────────
-  // Creates a new business account with hashed password (no user account needed)
+  // Creates a new business account using the User collection for credentials and links the Business via ownerId
   async onboardBusiness(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { email, name, phone, password } = req.body;
+      const { email, password, name, phone } = req.body;
       if (!email) throw new BadRequestError('Email is required');
-      if (!name) throw new BadRequestError('Business name is required');
+      if (!password) throw new BadRequestError('Password is required');
 
-      // Check if a business with this email already exists
-      const existing = await this.businessRepository.findByContactEmail(email);
-      if (existing) throw new BadRequestError('A business with this email is already registered. Please log in.');
+      // Check if user already exists with this email
+      let user = await this.userRepository.findByEmail(email);
+      if (user) {
+        if (user.role === UserRole.BUSINESS) {
+          throw new BadRequestError('A business user with this email already exists. Please log in.');
+        }
+        // Promote legacy/regular user to business merchant
+        const passwordHash = await bcrypt.hash(password, 10);
+        user = await this.userRepository.update(user.id, {
+          role: UserRole.BUSINESS,
+          passwordHash,
+          isPasswordSet: true,
+        });
+      } else {
+        // Create new user with BUSINESS role
+        const passwordHash = await bcrypt.hash(password, 10);
+        const newUser = new User(
+          uuidv4(),
+          name || email.split('@')[0],
+          null,
+          email,
+          passwordHash,
+          true,
+          UserRole.BUSINESS,
+          true,
+          new Date(),
+          new Date()
+        );
+        user = await this.userRepository.create(newUser);
+      }
 
-      // Hash password — use provided password or generate a temporary random one
-      const rawPassword = password || Math.random().toString(36).slice(-8) + 'A1!';
-      const passwordHash = await bcrypt.hash(rawPassword, 10);
+      // Check if business profile already exists for this email
+      const existingBusiness = await this.businessRepository.findByContactEmail(email);
+      if (existingBusiness) {
+        throw new BadRequestError('A business with this email already exists.');
+      }
 
-      const business = new Business({
-        id: uuidv4(),
-        ownerId: null,
+      // Now create the business linked to the User
+      const business = await this.businessesService.onboardBusiness({
+        ...req.body,
+        ownerId: user.id,
         contactEmail: email,
-        passwordHash,
-        isPasswordSet: !!password,
-        name,
-        username: undefined,
-        tagline: req.body.tagline ?? null,
-        description: req.body.description ?? null,
-        establishedYear: req.body.establishedYear ?? null,
-        gstNumber: req.body.gstNumber ?? null,
-        contactPerson: req.body.contactPerson ?? null,
-        phone: phone ?? null,
-        email: email,
-        websiteUrl: req.body.websiteUrl ?? null,
-        whatsappNumber: req.body.whatsappNumber ?? null,
-        mobileNumbers: req.body.mobileNumbers ?? (phone ? [phone] : []),
-        landlineNumbers: req.body.landlineNumbers ?? [],
-        emails: req.body.emails ?? [email],
-        address: req.body.address ?? null,
-        pincode: req.body.pincode ?? null,
-        plotNo: req.body.plotNo ?? null,
-        buildingName: req.body.buildingName ?? null,
-        streetName: req.body.streetName ?? null,
-        landmark: req.body.landmark ?? null,
-        area: req.body.area ?? null,
-        city: req.body.city ?? null,
-        state: req.body.state ?? null,
-        latitude: req.body.latitude ?? null,
-        longitude: req.body.longitude ?? null,
-        googleMapsUrl: req.body.googleMapsUrl ?? null,
-        timings: req.body.timings ?? null,
-        primaryCategory: req.body.primaryCategory ?? null,
-        subCategories: req.body.subCategories ?? [],
-        amenities: req.body.amenities ?? [],
-        parking: req.body.parking ?? null,
-        logo: req.body.logo ?? null,
-        coverPhoto: req.body.coverPhoto ?? null,
-        images: req.body.images ?? [],
-        socialLinks: req.body.socialLinks ?? null,
-        isVerified: false,
-        status: 'PENDING',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        isVerified: true,
+        status: 'APPROVED',
       });
 
-      const saved = await this.businessRepository.create(business);
-
-      // Issue a JWT for immediate session (type: 'business')
+      // Issue standard JWT token for the user session
       const secret = process.env.JWT_ACCESS_SECRET as string;
       const accessToken = jwt.sign(
-        { sub: saved.props.id, email: saved.props.contactEmail, type: 'business' },
+        { sub: user.id, email: user.email, role: user.role },
         secret,
         { expiresIn: '7d' }
       );
 
-      const { passwordHash: _, ...safeProps } = saved.props;
+      const { passwordHash: _, ...safeProps } = business.props;
       sendCreated(res, { business: safeProps, accessToken });
     } catch (err) {
       next(err);
@@ -208,16 +201,26 @@ export class BusinessesController implements IBusinessesController {
       const { email, password } = req.body;
       if (!email || !password) throw new BadRequestError('Email and password are required');
 
-      const business = await this.businessRepository.findByContactEmail(email);
-      if (!business) throw new UnauthorizedError('No business account found with this email');
-      if (!business.props.passwordHash) throw new UnauthorizedError('Password not set. Please contact support.');
+      const user = await this.userRepository.findByEmail(email);
+      if (!user) throw new UnauthorizedError('No account found with this email');
+      
+      if (user.role !== UserRole.BUSINESS && user.role !== UserRole.SUPER_ADMIN) {
+        throw new UnauthorizedError('This account is not a business account.');
+      }
 
-      const isValid = await bcrypt.compare(password, business.props.passwordHash);
+      const isValid = await bcrypt.compare(password, user.passwordHash);
       if (!isValid) throw new UnauthorizedError('Invalid credentials');
+
+      // Fetch the business associated with this ownerId
+      const businesses = await this.businessRepository.findByOwnerId(user.id);
+      if (businesses.length === 0) {
+        throw new NotFoundError('No business profile is associated with this account.');
+      }
+      const business = businesses[0];
 
       const secret = process.env.JWT_ACCESS_SECRET as string;
       const accessToken = jwt.sign(
-        { sub: business.props.id, email: business.props.contactEmail, type: 'business' },
+        { sub: user.id, email: user.email, role: user.role },
         secret,
         { expiresIn: '7d' }
       );
@@ -235,21 +238,22 @@ export class BusinessesController implements IBusinessesController {
       const { newPassword, oldPassword } = req.body;
       if (!newPassword) throw new BadRequestError('New password is required');
 
-      const business = await this.businessRepository.findById(req.user!.id);
-      if (!business) throw new NotFoundError('Business not found');
+      const user = await this.userRepository.findById(req.user!.id);
+      if (!user) throw new NotFoundError('User not found');
 
-      if (business.props.isPasswordSet) {
+      if (user.isPasswordSet) {
         if (!oldPassword) throw new BadRequestError('Old password is required');
-        const isValid = await bcrypt.compare(oldPassword, business.props.passwordHash!);
+        const isValid = await bcrypt.compare(oldPassword, user.passwordHash);
         if (!isValid) throw new BadRequestError('Old password is incorrect');
       }
 
       const passwordHash = await bcrypt.hash(newPassword, 10);
-      await this.businessRepository.update(business.props.id, {
-        props: { passwordHash, isPasswordSet: true }
-      } as any);
+      await this.userRepository.update(user.id, {
+        passwordHash,
+        isPasswordSet: true,
+      });
 
-      sendSuccess(res, { success: true, message: 'Password updated successfully' });
+      sendSuccess(res, { message: 'Password updated successfully' });
     } catch (err) {
       next(err);
     }

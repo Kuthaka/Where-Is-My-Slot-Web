@@ -191,7 +191,9 @@ export default function BusinessRegisterPage() {
       const responseData = await res.json();
       if (responseData.data?.accessToken) {
         const token = responseData.data.accessToken;
+        localStorage.setItem("token", token);
         localStorage.setItem("businessToken", token);
+        document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Strict`;
         document.cookie = `businessToken=${token}; path=/; max-age=604800; SameSite=Strict`;
       }
 

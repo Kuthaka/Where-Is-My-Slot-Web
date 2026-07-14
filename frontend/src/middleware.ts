@@ -51,10 +51,10 @@ export function middleware(request: NextRequest) {
   const bizPayload = businessToken ? decodeJwtPayload(businessToken) : null;
 
   const userRole = userPayload?.role as string | undefined;
-  const bizType = bizPayload?.type as string | undefined; // 'business'
+  const bizRole = bizPayload?.role as string | undefined;
 
   const isValidUser = !!userPayload;
-  const isValidBusiness = bizType === "business" && !!bizPayload;
+  const isValidBusiness = (bizRole === "BUSINESS" || bizRole === "SUPER_ADMIN") && !!bizPayload;
 
   // ─── Business pages: require businessToken ──────────────────────────────────
   if (isBusinessPage) {

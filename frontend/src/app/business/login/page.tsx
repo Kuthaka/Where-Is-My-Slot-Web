@@ -31,7 +31,9 @@ export default function BusinessLoginPage() {
       }
 
       const token = data.data.accessToken;
+      localStorage.setItem("token", token);
       localStorage.setItem("businessToken", token);
+      document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Strict`;
       document.cookie = `businessToken=${token}; path=/; max-age=604800; SameSite=Strict`;
 
       toast.success("Welcome back! 🎉", { id: toastId });
