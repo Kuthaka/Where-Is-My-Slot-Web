@@ -23,6 +23,11 @@ export class MongooseBusinessRepository implements IBusinessRepository {
     return doc ? this.toDomain(doc) : null;
   }
 
+  async findByContactEmail(email: string): Promise<Business | null> {
+    const doc = await BusinessModel.findOne({ contactEmail: email }).exec();
+    return doc ? this.toDomain(doc) : null;
+  }
+
   async findAll(): Promise<Business[]> {
     const docs = await BusinessModel.find().exec();
     return docs.map((d: any) => this.toDomain(d));
@@ -63,6 +68,11 @@ export class MongooseBusinessRepository implements IBusinessRepository {
     const props: BusinessProps = {
       id: doc._id.toString(),
       ownerId: (doc.ownerId?.toString()) ?? null,
+      // Merchant auth
+      contactEmail: doc.contactEmail,
+      passwordHash: doc.passwordHash ?? null,
+      isPasswordSet: doc.isPasswordSet,
+      // Profile
       name: doc.name,
       username: doc.username ?? null,
       tagline: doc.tagline ?? null,

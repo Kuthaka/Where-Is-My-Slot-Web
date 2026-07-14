@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Mail, ArrowRight, Building2, MapPin, Car, UploadCloud,
-  ChevronRight, ChevronLeft, Check, Clock,
+  ChevronRight, ChevronLeft, Check, Clock, KeyRound, Eye, EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -19,6 +19,9 @@ export default function BusinessRegisterPage() {
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
 
   // Step 0
   const [email, setEmail] = useState("");
@@ -33,32 +36,131 @@ export default function BusinessRegisterPage() {
     city: "",
     state: "",
     pincode: "",
+    password: "",
     parking: { available: false, slots: 0, valet: false },
     images: [] as string[],
     amenities: [] as string[],
   });
 
+  // Draft saving & restoring
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+    const draft = sessionStorage.getItem("businessDraft");
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        if (parsed.email) setEmail(parsed.email);
+        if (parsed.formData) setFormData(parsed.formData);
+        if (parsed.step) setStep(parsed.step);
+      } catch (e) {
+        console.error("Error parsing draft", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      sessionStorage.setItem("businessDraft", JSON.stringify({ email, formData, step }));
+    }
+  }, [email, formData, step, isClient]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Step 0 → Step 1
-  const handleEmailContinue = (e: React.FormEvent) => {
+  // Step 0 → OTP
+  const handleEmailContinue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setStep(1);
+    setLoading(true);
+    const toastId = toast.loading("Sending OTP...");
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/business-auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message?.message || err.message || "Failed to send OTP");
+      }
+      toast.success("OTP sent to your email!", { id: toastId });
+      setShowOtpModal(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An error occurred";
+      toast.error(msg, { id: toastId });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email) return;
+    const toastId = toast.loading("Resending OTP...");
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/business-auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message?.message || err.message || "Failed to resend OTP");
+      }
+      toast.success("OTP resent successfully!", { id: toastId });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An error occurred";
+      toast.error(msg, { id: toastId });
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length < 6) return;
+    setLoading(true);
+    const toastId = toast.loading("Verifying OTP...");
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/business-auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message?.message || err.message || "Invalid OTP");
+      }
+      const responseData = await res.json();
+      if (responseData.data?.verifiedToken) {
+        sessionStorage.setItem("businessVerifiedToken", responseData.data.verifiedToken);
+      }
+      toast.success("Email verified!", { id: toastId });
+      setShowOtpModal(false);
+      setStep(1); // Proceed to next step
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An error occurred";
+      toast.error(msg, { id: toastId });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNext = () => {
     if (step === 1) {
       if (!formData.name || !formData.phone) {
-        showModal({ title: "Incomplete", message: "Please fill in Business Name and Phone.", type: "alert" });
+        toast.error("Please fill in Business Name and Phone number.");
         return;
       }
     }
     if (step === 2) {
       if (!formData.address || !formData.city || !formData.state) {
-        showModal({ title: "Incomplete", message: "Please fill in Address, City and State.", type: "alert" });
+        toast.error("Please fill in Address, City and State.");
+        return;
+      }
+    }
+    if (step === 3) {
+      if (!formData.password || formData.password.length < 6) {
+        toast.error("Please set a password with at least 6 characters.");
         return;
       }
     }
@@ -69,6 +171,7 @@ export default function BusinessRegisterPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    const toastId = toast.loading("Registering your business...");
     try {
       const res = await fetch("http://localhost:5000/api/v1/businesses/onboard", {
         method: "POST",
@@ -87,13 +190,18 @@ export default function BusinessRegisterPage() {
 
       const responseData = await res.json();
       if (responseData.data?.accessToken) {
-        sessionStorage.setItem("onboardingToken", responseData.data.accessToken);
+        const token = responseData.data.accessToken;
+        localStorage.setItem("businessToken", token);
+        document.cookie = `businessToken=${token}; path=/; max-age=604800; SameSite=Strict`;
       }
 
+      toast.success("Business registered successfully! 🎉", { id: toastId });
+      sessionStorage.removeItem("businessDraft");
+      sessionStorage.removeItem("businessVerifiedToken");
       router.push("/business/register/success");
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "An error occurred";
-      showModal({ title: "Error", message: msg, type: "error" });
+      toast.error(msg, { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -105,6 +213,7 @@ export default function BusinessRegisterPage() {
     const fd = new FormData();
     fd.append("file", file);
     setLoading(true);
+    const toastId = toast.loading("Uploading image...");
     try {
       const res = await fetch("http://localhost:5000/api/v1/businesses/upload-image", {
         method: "POST",
@@ -113,8 +222,9 @@ export default function BusinessRegisterPage() {
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       setFormData((prev) => ({ ...prev, images: [...prev.images, data.data.url] }));
+      toast.success("Image uploaded!", { id: toastId });
     } catch {
-      showModal({ title: "Upload Failed", message: "Could not upload image. Please try again.", type: "error" });
+      toast.error("Could not upload image. Please try again.", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -142,6 +252,59 @@ export default function BusinessRegisterPage() {
             backgroundRepeat: "no-repeat",
           }}
         >
+          {/* OTP Modal */}
+          {showOtpModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div className="bg-white dark:bg-[#242424] rounded-3xl p-8 max-w-sm w-full shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                <button 
+                  onClick={() => setShowOtpModal(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  ✕
+                </button>
+                <div className="flex justify-center mb-6">
+                  <div className="bg-yellow-100 dark:bg-yellow-400/20 p-3 rounded-full text-yellow-600 dark:text-yellow-400">
+                    <Mail size={32} />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-black text-center mb-2">Check your email</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center text-sm mb-6">
+                  We've sent a 6-digit verification code to <strong>{email}</strong>
+                </p>
+                <form onSubmit={handleVerifyOtp} className="space-y-6">
+                  <div>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center tracking-[0.5em] text-3xl font-black bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all text-gray-900 dark:text-white"
+                      placeholder="••••••"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading || otp.length !== 6}
+                    className="w-full flex justify-center py-3 px-4 rounded-xl shadow-md text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors disabled:opacity-50"
+                  >
+                    {loading ? "Verifying..." : "Verify & Continue"}
+                  </button>
+                </form>
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={loading}
+                    className="text-sm font-bold text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 transition-colors disabled:opacity-50"
+                  >
+                    Didn't receive it? Resend OTP
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="max-w-[1440px] mx-auto w-full flex items-center pt-[96px] pb-12 px-4 lg:px-8">
             <div className="w-full max-w-md bg-white/95 dark:bg-[#242424]/95 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-gray-200 dark:border-gray-800 relative z-10">
               <div className="flex flex-col items-center">
@@ -328,6 +491,34 @@ export default function BusinessRegisterPage() {
                             </button>
                           );
                         })}
+                      </div>
+                    </div>
+
+                    {/* Set Password */}
+                    <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg text-gray-600 dark:text-gray-400"><KeyRound size={20} /></div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 dark:text-white">Set Dashboard Password *</h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">You'll use this to log in to your merchant dashboard.</p>
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <input
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={handleChange}
+                          className="w-full bg-white dark:bg-[#242424] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all text-gray-900 dark:text-white"
+                          placeholder="Min. 6 characters"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
                       </div>
                     </div>
                   </div>

@@ -9,7 +9,8 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: string;
+    role?: string;
+    type?: string;
   };
 }
 
@@ -28,8 +29,8 @@ export function authenticate(
 
   try {
     const secret = process.env.JWT_ACCESS_SECRET as string;
-    const payload = jwt.verify(token, secret) as { sub: string; email: string; role: string };
-    req.user = { id: payload.sub, email: payload.email, role: payload.role };
+    const payload = jwt.verify(token, secret) as { sub: string; email: string; role?: string; type?: string };
+    req.user = { id: payload.sub, email: payload.email, role: payload.role, type: payload.type };
     next();
   } catch {
     next(new UnauthorizedError('Invalid or expired token'));

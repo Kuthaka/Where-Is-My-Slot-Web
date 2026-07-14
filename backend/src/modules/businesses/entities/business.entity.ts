@@ -3,6 +3,11 @@
 export interface BusinessProps {
   id: string;
   ownerId: string | null;
+  // Merchant auth
+  contactEmail: string;
+  passwordHash?: string | null;
+  isPasswordSet: boolean;
+  // Profile
   name: string;
   username?: string | null;
   tagline?: string | null;

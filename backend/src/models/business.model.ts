@@ -4,6 +4,11 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBusinessDocument extends Document {
   ownerId?: string;
+  // ─── Merchant Auth Fields ──────────────────────────────────
+  contactEmail: string;      // primary login email for merchant
+  passwordHash?: string;     // hashed password for dashboard login
+  isPasswordSet: boolean;    // true once merchant sets their password
+  // ───────────────────────────────────────────────────────────
   name: string;
   username?: string;
   tagline?: string;
@@ -48,6 +53,11 @@ export interface IBusinessDocument extends Document {
 const BusinessSchema = new Schema<IBusinessDocument>(
   {
     ownerId: { type: Schema.Types.ObjectId as unknown as typeof String, ref: 'User', index: true },
+    // Merchant auth fields
+    contactEmail: { type: String, required: true, unique: true },
+    passwordHash: { type: String },
+    isPasswordSet: { type: Boolean, default: false },
+    // Business profile
     name: { type: String, required: true },
     username: { type: String, unique: true, sparse: true },
     tagline: String,

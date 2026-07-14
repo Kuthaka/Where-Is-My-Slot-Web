@@ -19,6 +19,7 @@ import { TYPES } from './core/container/types';
 import {
   createAuthRouter,
   createBusinessesRouter,
+  createBusinessAuthRouter,
   createAdminRouter,
   createPostsRouter,
   createFlashDealsRouter,
@@ -96,10 +97,9 @@ export function createApp(): Application {
 
   // ── Module Routes ─────────────────────────────────────────────────────────────
   app.use('/api/v1/auth', createAuthRouter(authController));
-
+  app.use('/api/v1/business-auth', createBusinessAuthRouter(businessesController));
   app.use('/api/v1/businesses', createBusinessesRouter(businessesController));
   app.use('/api/v1/admin', createAdminRouter(adminController));
-
   app.use('/api/v1/posts', createPostsRouter(postsController));
   app.use('/api/v1/flash-deals', createFlashDealsRouter(flashDealsController));
 

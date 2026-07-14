@@ -17,6 +17,9 @@ export class BusinessesService implements IBusinessesService {
     const business = new Business({
       id: uuidv4(),
       ownerId: (data.ownerId as string) ?? null,
+      contactEmail: (data.contactEmail as string) ?? (data.email as string) ?? '',
+      passwordHash: (data.passwordHash as string) ?? null,
+      isPasswordSet: (data.isPasswordSet as boolean) ?? false,
       name: data.name as string,
       username: (data.username as string) || undefined,
       tagline: (data.tagline as string) ?? null,

@@ -5,6 +5,10 @@ export interface IBusinessesController {
   exploreBusinesses(req: Request, res: Response, next: NextFunction): Promise<void>;
   getMyBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
   updateMyBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
-  onboardBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
-  uploadImage(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
+  onboardBusiness(req: Request, res: Response, next: NextFunction): Promise<void>;
+  uploadImage(req: Request, res: Response, next: NextFunction): Promise<void>;
+  businessLogin(req: Request, res: Response, next: NextFunction): Promise<void>;
+  businessSetPassword(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
+  businessSendOtp(req: Request, res: Response, next: NextFunction): Promise<void>;
+  businessVerifyOtp(req: Request, res: Response, next: NextFunction): Promise<void>;
 }
