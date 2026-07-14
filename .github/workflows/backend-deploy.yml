@@ -59,6 +59,7 @@ jobs:
 
             npm ci --omit=dev
 
-            pm2 startOrReload ecosystem.config.js
+            pm2 delete whereslot-api || true
+            pm2 start ecosystem.config.js
 
             pm2 save
