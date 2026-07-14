@@ -27,15 +27,11 @@ export function createBusinessesRouter(businessesController: IBusinessesControll
 
   router.post(
     '/onboard',
-    authenticate,
-    requireRoles(UserRole.BUSINESS, UserRole.SUPER_ADMIN),
     businessesController.onboardBusiness.bind(businessesController)
   );
 
   router.post(
     '/upload-image',
-    authenticate,
-    requireRoles(UserRole.BUSINESS, UserRole.SUPER_ADMIN),
     upload.single('file'),
     businessesController.uploadImage.bind(businessesController)
   );

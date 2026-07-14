@@ -1,10 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
 import { CheckCircle, Store, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/Header";
 
 export default function BusinessSuccessPage() {
+  useEffect(() => {
+    sessionStorage.removeItem("onboardingToken");
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-[#f0f2f5] dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 flex flex-col transition-colors duration-300">
       <Header />
@@ -42,8 +47,8 @@ export default function BusinessSuccessPage() {
                 <li className="flex gap-2"><span className="text-green-500 font-bold">✓</span> You can start adding exclusive offers immediately!</li>
               </ul>
 
-              <a href="/business/dashboard" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-yellow-400/30 text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-500 transition-colors group">
-                Go to Merchant Dashboard
+              <a href="/business/login" className="w-full flex justify-center py-3.5 px-4 rounded-xl shadow-lg shadow-yellow-400/30 text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-500 transition-colors group">
+                Login to Merchant Dashboard
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>

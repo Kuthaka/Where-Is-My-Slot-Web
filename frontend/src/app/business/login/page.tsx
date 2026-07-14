@@ -12,7 +12,7 @@ export default function BusinessLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<"password" | "email">("password");
+  const [loginMethod, setLoginMethod] = useState<"password" | "email">("email");
   const [loading, setLoading] = useState(false);
 
   const handlePasswordLogin = async (e: React.FormEvent) => {

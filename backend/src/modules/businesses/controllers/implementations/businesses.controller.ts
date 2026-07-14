@@ -3,11 +3,17 @@ import { Types } from 'mongoose';
 import { IBusinessesController } from '../interfaces/businesses.controller.interface';
 import { IBusinessesService } from '../../services/interfaces/businesses.service.interface';
 import { IBusinessRepository } from '../../repositories/interfaces/business.repository.interface';
+import { IUserRepository } from '../../../users/repositories/interfaces/user.repository.interface';
 import { AuthenticatedRequest } from '../../../../shared/middleware/auth.middleware';
 import { sendSuccess, sendCreated } from '../../../../shared/middleware/response.middleware';
 import { BusinessModel } from '../../../../models/business.model';
 import { uploadBuffer } from '../../../../core/services/cloudinary.service';
 import { BadRequestError } from '../../../../shared/errors/app-error';
+import { UserRole } from '../../../../shared/enums/user-role.enum';
+import { User } from '../../../users/entities/user.entity';
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../../../core/container/types';
@@ -16,7 +22,8 @@ import { TYPES } from '../../../../core/container/types';
 export class BusinessesController implements IBusinessesController {
   constructor(
     @inject(TYPES.BusinessesService) private readonly businessesService: IBusinessesService,
-    @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository
+    @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository,
+    @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository
   ) {}
 
   async exploreBusinesses(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -89,19 +96,48 @@ export class BusinessesController implements IBusinessesController {
     }
   }
 
-  async onboardBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async onboardBusiness(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      const email = req.body.email;
+      if (!email) throw new BadRequestError('Email is required for onboarding');
+
+      let user = await this.userRepository.findByEmail(email);
+
+      if (!user) {
+        const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
+        const newUser = new User(
+          uuidv4(),
+          req.body.name || email.split('@')[0],
+          null,
+          email,
+          randomPassword,
+          false,
+          UserRole.BUSINESS,
+          true,
+          new Date(),
+          new Date()
+        );
+        user = await this.userRepository.create(newUser);
+      } else if (user.role === UserRole.USER) {
+        user = await this.userRepository.update(user.id, { role: UserRole.BUSINESS });
+      }
+
       const business = await this.businessesService.onboardBusiness({
-        ownerId: req.user!.id,
+        ownerId: user.id,
         ...req.body,
       });
-      sendCreated(res, business.props);
+
+      const secret = process.env.JWT_ACCESS_SECRET as string;
+      const payload = { sub: user.id, email: user.email, role: user.role };
+      const accessToken = jwt.sign(payload, secret, { expiresIn: '7d' });
+
+      sendCreated(res, { business: business.props, accessToken });
     } catch (err) {
       next(err);
     }
   }
 
-  async uploadImage(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.file) throw new BadRequestError('No image file provided');
       const url = await uploadBuffer(req.file.buffer);
@@ -111,3 +147,4 @@ export class BusinessesController implements IBusinessesController {
     }
   }
 }
+
