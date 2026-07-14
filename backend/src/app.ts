@@ -47,7 +47,7 @@ export function createApp(): Application {
   // ── Health Check ─────────────────────────────────────────────────────────────
   app.get('/api/v1/health', (_req, res) => {
     res.json({
-      status: 'ok',
+      status: 'ok where slot',
       timestamp: new Date().toISOString(),
       version: '2.0.0',
     });
