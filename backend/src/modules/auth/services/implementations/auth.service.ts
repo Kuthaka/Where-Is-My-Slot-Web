@@ -3,13 +3,11 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
 import { IAuthService } from '../interfaces/auth.service.interface';
-import { IOtpRepository } from '../../repositories/interfaces/otp.repository.interface';
 import { IUserRepository } from '../../../users/repositories/interfaces/user.repository.interface';
-import { Otp } from '../../entities/otp.entity';
 import { User } from '../../../users/entities/user.entity';
 import { UserRole } from '../../../../shared/enums/user-role.enum';
-import { sendOtpEmail } from '../../../../core/services/email.service';
 import { UnauthorizedError, ConflictError, BadRequestError, NotFoundError } from '../../../../shared/errors/app-error';
+import { IOtpService } from '../../../../shared/services/interfaces/otp.service.interface';
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../../../core/container/types';
@@ -18,28 +16,17 @@ import { TYPES } from '../../../../core/container/types';
 export class AuthService implements IAuthService {
   constructor(
     @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository,
-    @inject(TYPES.OtpRepository) private readonly otpRepository: IOtpRepository
+    @inject(TYPES.OtpService) private readonly otpService: IOtpService
   ) {}
 
   async sendOtp(email: string): Promise<{ success: boolean; message: string }> {
-    const otpValue = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    const otp = new Otp(uuidv4(), email, otpValue, expiresAt, new Date());
-    await this.otpRepository.create(otp);
-
-    await sendOtpEmail(email, otpValue);
-
+    await this.otpService.sendOtp(email);
     return { success: true, message: `OTP sent successfully to ${email}` };
   }
 
   async verifyOtp(email: string, otpValue: string): Promise<{ success: boolean; message: string }> {
-    // Uncomment for strict OTP check in production:
-    // const record = await this.otpRepository.findLatestValidOtp(email, otpValue);
-    // if (!record || record.expiresAt < new Date()) {
-    //   throw new BadRequestError('Invalid or expired OTP');
-    // }
-    // await this.otpRepository.delete(record.id);
+    // Optional: Call otpService.verifyOtp(email, otpValue) if strict OTP checks are desired here in production
+    // For now, we keep the original logic intact.
 
     let user = await this.userRepository.findByEmail(email);
 
@@ -66,7 +53,7 @@ export class AuthService implements IAuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = jwt.sign(payload, secret, { expiresIn: '7d' });
 
-    return { success: true, message: accessToken }; // Returning accessToken in message for now, but usually it returns {accessToken, user}
+    return { success: true, message: accessToken };
   }
 
   async login(email: string, password: string): Promise<{ accessToken: string; user: Omit<User, 'passwordHash'> }> {
@@ -84,7 +71,11 @@ export class AuthService implements IAuthService {
     return { accessToken, user: safeUser as Omit<User, 'passwordHash'> };
   }
 
-  async registerUser(data: { name: string; username: string; email: string; passwordPlain: string }): Promise<Omit<User, 'passwordHash'>> {
+  async registerUser(data: { name: string; username: string; email: string; passwordPlain: string; otp: string }): Promise<{ accessToken: string; user: Omit<User, 'passwordHash'> }> {
+    // 1. Verify OTP first
+    await this.otpService.verifyOtp(data.email, data.otp);
+
+    // 2. Perform existing checks
     const existingEmail = await this.userRepository.findByEmail(data.email);
     if (existingEmail) throw new ConflictError('User with this email already exists');
 
@@ -108,7 +99,12 @@ export class AuthService implements IAuthService {
 
     const createdUser = await this.userRepository.create(user);
     const { passwordHash: _, ...safeUser } = createdUser;
-    return safeUser;
+
+    const secret = process.env.JWT_ACCESS_SECRET as string;
+    const payload = { sub: createdUser.id, email: createdUser.email, role: createdUser.role };
+    const accessToken = jwt.sign(payload, secret, { expiresIn: '7d' });
+
+    return { accessToken, user: safeUser as Omit<User, 'passwordHash'> };
   }
 
   async setPassword(userId: string, newPasswordPlain: string, oldPasswordPlain?: string): Promise<{ success: boolean; message: string }> {

@@ -3,21 +3,19 @@ import { Types } from 'mongoose';
 import { IBusinessesController } from '../interfaces/businesses.controller.interface';
 import { IBusinessesService } from '../../services/interfaces/businesses.service.interface';
 import { IBusinessRepository } from '../../repositories/interfaces/business.repository.interface';
-import { IOtpRepository } from '../../../auth/repositories/interfaces/otp.repository.interface';
 import { IUserRepository } from '../../../users/repositories/interfaces/user.repository.interface';
 import { AuthenticatedRequest } from '../../../../shared/middleware/auth.middleware';
 import { sendSuccess, sendCreated } from '../../../../shared/middleware/response.middleware';
 import { BusinessModel } from '../../../../models/business.model';
-import { uploadBuffer } from '../../../../core/services/cloudinary.service';
-import { sendOtpEmail } from '../../../../core/services/email.service';
+import { uploadBuffer } from '../../../../shared/services/cloudinary.service';
 import { BadRequestError, UnauthorizedError, NotFoundError } from '../../../../shared/errors/app-error';
-import { Otp } from '../../../auth/entities/otp.entity';
 import { User } from '../../../users/entities/user.entity';
 import { UserRole } from '../../../../shared/enums/user-role.enum';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { Business } from '../../entities/business.entity';
+import { IOtpService } from '../../../../shared/services/interfaces/otp.service.interface';
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../../../core/container/types';
@@ -27,7 +25,7 @@ export class BusinessesController implements IBusinessesController {
   constructor(
     @inject(TYPES.BusinessesService) private readonly businessesService: IBusinessesService,
     @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository,
-    @inject(TYPES.OtpRepository) private readonly otpRepository: IOtpRepository,
+    @inject(TYPES.OtpService) private readonly otpService: IOtpService,
     @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository,
   ) {}
 
@@ -276,13 +274,7 @@ export class BusinessesController implements IBusinessesController {
       const { email } = req.body;
       if (!email) throw new BadRequestError('Email is required');
 
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
-
-      console.log(`\n=========================================\n[OTP GENERATED] Email: ${email} | Code: ${otp}\n=========================================\n`);
-
-      await this.otpRepository.create(new Otp(uuidv4(), email, otp, expiresAt, new Date()));
-      await sendOtpEmail(email, otp);
+      await this.otpService.sendOtp(email);
 
       sendSuccess(res, { message: `OTP sent to ${email}` });
     } catch (err) {
@@ -296,11 +288,7 @@ export class BusinessesController implements IBusinessesController {
       const { email, otp } = req.body;
       if (!email || !otp) throw new BadRequestError('Email and OTP are required');
 
-      const record = await this.otpRepository.findLatestValidOtp(email, otp);
-      if (!record) throw new BadRequestError('Invalid or expired OTP. Please request a new one.');
-
-      // Delete the OTP so it can't be reused
-      await this.otpRepository.delete(record.id);
+      await this.otpService.verifyOtp(email, otp);
 
       // Issue a short-lived "email-verified" token for the onboarding session
       const secret = process.env.JWT_ACCESS_SECRET as string;

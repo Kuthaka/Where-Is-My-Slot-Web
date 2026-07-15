@@ -10,6 +10,7 @@ export const TYPES = {
     BusinessesService: Symbol.for("BusinessesService"),
     AdminService: Symbol.for("AdminService"),
     PostsService: Symbol.for("PostsService"),
+    OtpService: Symbol.for("OtpService"),
 
     // Controllers
     AuthController: Symbol.for("AuthController"),

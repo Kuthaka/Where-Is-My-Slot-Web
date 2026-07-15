@@ -21,6 +21,8 @@ import { IAdminService } from '../../modules/admin/services/interfaces/admin.ser
 import { AdminService } from '../../modules/admin/services/implementations/admin.service';
 import { IPostsService } from '../../modules/posts/services/interfaces/posts.service.interface';
 import { PostsService } from '../../modules/posts/services/implementations/posts.service';
+import { IOtpService } from '../../shared/services/interfaces/otp.service.interface';
+import { OtpService } from '../../shared/services/implementations/otp.service';
 
 // Controllers
 import { IAuthController } from '../../modules/auth/controllers/interfaces/auth.controller.interface';
@@ -47,6 +49,7 @@ container.bind<IAuthService>(TYPES.AuthService).to(AuthService);
 container.bind<IBusinessesService>(TYPES.BusinessesService).to(BusinessesService);
 container.bind<IAdminService>(TYPES.AdminService).to(AdminService);
 container.bind<IPostsService>(TYPES.PostsService).to(PostsService);
+container.bind<IOtpService>(TYPES.OtpService).to(OtpService);
 
 // Controllers
 container.bind<IAuthController>(TYPES.AuthController).to(AuthController);

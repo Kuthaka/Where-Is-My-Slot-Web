@@ -44,10 +44,10 @@ export class AuthController implements IAuthController {
 
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { firstName, lastName, username, email, password } = req.body;
+      const { firstName, lastName, username, email, password, otp } = req.body;
       const name = `${firstName} ${lastName}`.trim();
-      const user = await this.authService.registerUser({ name, username, email, passwordPlain: password });
-      sendCreated(res, user);
+      const result = await this.authService.registerUser({ name, username, email, passwordPlain: password, otp });
+      sendCreated(res, result);
     } catch (err) {
       next(err);
     }

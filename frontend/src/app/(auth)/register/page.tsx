@@ -21,6 +21,9 @@ export default function UserRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
   const [emailStatus, setEmailStatus] = useState<"idle" | "loading" | "valid" | "invalid">("idle");
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -63,33 +66,144 @@ export default function UserRegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    const toastId = toast.loading("Sending verification OTP...");
     try {
-      const res = await fetch("http://localhost:5000/api/v1/auth/register", {
+      const res = await fetch("http://localhost:5000/api/v1/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ email: formData.email }),
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message?.message || data.message || "Registration failed");
+        throw new Error(data.message?.message || data.message || "Failed to send OTP");
       }
-      toast.success("Account created successfully!");
-      // Auto login after register (optional, or redirect to login)
-      router.push("/login?registered=true");
+      toast.success("OTP sent to your email!", { id: toastId });
+      setShowOtpModal(true);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        toast.error(err.message);
+        toast.error(err.message, { id: toastId });
       } else {
-        toast.error("Registration failed");
+        toast.error("Failed to send OTP", { id: toastId });
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length !== 6) return;
+    setOtpLoading(true);
+    const toastId = toast.loading("Verifying OTP & Registering...");
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message?.message || data.message || "Registration failed");
+      }
+      
+      // Auto login the user
+      if (data.data?.accessToken) {
+        localStorage.setItem("token", data.data.accessToken);
+        document.cookie = `token=${data.data.accessToken}; path=/; max-age=604800; SameSite=Strict`;
+      }
+      
+      toast.success("Account created and logged in successfully!", { id: toastId });
+      setShowOtpModal(false);
+      window.location.href = "/";
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message, { id: toastId });
+      } else {
+        toast.error("Registration failed", { id: toastId });
+      }
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    const toastId = toast.loading("Resending OTP...");
+    try {
+      const res = await fetch("http://localhost:5000/api/v1/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message?.message || data.message || "Failed to resend OTP");
+      }
+      toast.success("OTP resent successfully!", { id: toastId });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message, { id: toastId });
+      } else {
+        toast.error("Failed to resend OTP", { id: toastId });
+      }
+    }
+  };
+
   return (
     <div className="h-screen w-full bg-[#f0f2f5] dark:bg-[#1a1a1a] text-gray-900 dark:text-gray-100 flex flex-col overflow-hidden transition-colors duration-300">
       <Header />
+      
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#242424] rounded-3xl p-8 max-w-sm w-full shadow-2xl relative animate-in fade-in zoom-in duration-200">
+            <button 
+              type="button"
+              onClick={() => setShowOtpModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            >
+              ✕
+            </button>
+            <div className="flex justify-center mb-6">
+              <div className="bg-yellow-100 dark:bg-yellow-400/20 p-3 rounded-full text-yellow-600 dark:text-yellow-400">
+                <Mail size={32} />
+              </div>
+            </div>
+            <h3 className="text-2xl font-black text-center mb-2">Check your email</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center text-sm mb-6">
+              We've sent a 6-digit verification code to <strong>{formData.email}</strong>
+            </p>
+            <form onSubmit={handleVerifyAndRegister} className="space-y-6">
+              <div>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  className="w-full text-center tracking-[0.5em] text-3xl font-black bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all text-gray-900 dark:text-white"
+                  placeholder="••••••"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={otpLoading || otp.length !== 6}
+                className="w-full flex justify-center py-3 px-4 rounded-xl shadow-md text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors disabled:opacity-50"
+              >
+                {otpLoading ? "Verifying..." : "Verify & Register"}
+              </button>
+            </form>
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={otpLoading}
+                className="text-sm font-bold text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 transition-colors disabled:opacity-50"
+              >
+                Didn't receive it? Resend OTP
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <main className="flex-1 max-w-[1440px] mx-auto w-full flex items-center justify-center pt-[72px] px-4 h-full overflow-y-auto no-scrollbar pb-8">
         <div className="w-full max-w-[480px] bg-white dark:bg-[#242424] rounded-[32px] p-8 md:p-10 shadow-sm border border-gray-100 dark:border-gray-800 my-8">
