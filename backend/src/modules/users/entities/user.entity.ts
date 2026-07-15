@@ -11,6 +11,7 @@ export class User {
     public role: string,
     public isActive: boolean,
     public readonly createdAt: Date,
-    public readonly updatedAt: Date
+    public readonly updatedAt: Date,
+    public location?: { address: string; latitude: number; longitude: number }
   ) {}
 }

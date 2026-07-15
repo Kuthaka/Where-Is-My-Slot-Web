@@ -4,14 +4,15 @@ import { useTheme } from "next-themes";
 import { useEffect, useState, useRef } from "react";
 import { 
   Home, Moon, Sun, Bookmark, 
-  MapPin, Compass, Car, User, LogOut
+  MapPin, Compass, Car, User, LogOut, Search
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/store";
+import { RootState, AppDispatch } from "@/store";
 import { logout as reduxLogout } from "@/store/slices/authSlice";
+import { saveLocationToBackend, LocationData } from "@/store/slices/locationSlice";
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
@@ -22,18 +23,19 @@ export default function Header() {
   const pathname = usePathname();
   
   const { user } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  const { currentLocation, loading: locationLoading } = useSelector((state: RootState) => state.location);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const [locationName, setLocationName] = useState("Set Location");
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<LocationData[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
   useEffect(() => {
     setMounted(true);
-    const savedLocation = localStorage.getItem("userLocation");
-    if (savedLocation) {
-      setLocationName(savedLocation);
-    }
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
@@ -43,11 +45,46 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Location search debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`http://localhost:5000/api/v1/location/search?query=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        if (data.success) {
+          setSearchResults(data.data.results || []);
+        }
+      } catch (err) {
+        console.error("Search failed", err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const handleLogout = () => {
     dispatch(reduxLogout());
     setDropdownOpen(false);
     toast.success("Successfully logged out");
     router.push("/login");
+  };
+
+  const handleSelectLocation = async (location: LocationData) => {
+    try {
+      await dispatch(saveLocationToBackend(location)).unwrap();
+      toast.success("Location set successfully");
+      setLocationModalOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+    } catch (err: any) {
+      toast.error(err || "Failed to set location");
+    }
   };
 
   const handleFetchLocation = () => {
@@ -77,8 +114,13 @@ export default function Header() {
               data.address.county ||
               newLoc;
           }
-          setLocationName(newLoc);
-          localStorage.setItem("userLocation", newLoc);
+          
+          await dispatch(saveLocationToBackend({
+            address: newLoc,
+            latitude,
+            longitude
+          })).unwrap();
+
           toast.success("Location updated successfully");
           setLocationModalOpen(false);
         } catch (error) {
@@ -93,6 +135,10 @@ export default function Header() {
       }
     );
   };
+
+  const locationDisplay = currentLocation?.address 
+    ? (currentLocation.address.split(',')[0] || currentLocation.address)
+    : "Set Location";
 
   return (
     <>
@@ -150,8 +196,8 @@ export default function Header() {
               onClick={() => setLocationModalOpen(true)}
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-[#1a1a1a] hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors border border-transparent dark:border-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300"
             >
-              <MapPin size={16} className="text-yellow-500" />
-              <span className="truncate max-w-[120px]">{mounted ? locationName : "Set Location"}</span>
+              <MapPin size={16} className="text-yellow-500 shrink-0" />
+              <span className="truncate max-w-[120px]">{mounted ? locationDisplay : "Set Location"}</span>
             </button>
 
             {mounted && (
@@ -202,28 +248,70 @@ export default function Header() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => !isFetchingLocation && setLocationModalOpen(false)}
+            onClick={() => !locationLoading && !isFetchingLocation && setLocationModalOpen(false)}
           />
-          <div className="relative bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all text-center animate-in fade-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-400/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-              <MapPin size={32} className="text-yellow-500" />
+          <div className="relative bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 max-w-lg w-full shadow-2xl transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-14 h-14 bg-yellow-100 dark:bg-yellow-400/20 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                <MapPin size={28} className="text-yellow-500" />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
+                Set Your Location
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">
+                Discover businesses, flash deals, and events near you.
+              </p>
             </div>
             
-            <h3 className="text-2xl font-black mb-3 text-gray-900 dark:text-white">
-              Enable Location
-            </h3>
-            
-            <p className="text-gray-500 dark:text-gray-400 mb-8 font-medium text-sm leading-relaxed">
-              We need access to your location to show relevant businesses, offers, and events near you.
-            </p>
-            
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
+              {/* Search Input */}
+              <div className="relative">
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search for your city or area..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-gray-50 dark:bg-[#242424] border border-gray-200 dark:border-gray-800 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all text-gray-900 dark:text-white placeholder-gray-400"
+                />
+                {isSearching && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* Search Results Dropdown */}
+              {searchResults.length > 0 && (
+                <div className="max-h-[200px] overflow-y-auto rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#242424] shadow-sm divide-y divide-gray-100 dark:divide-gray-800">
+                  {searchResults.map((result, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSelectLocation(result)}
+                      disabled={locationLoading}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-colors text-sm text-gray-700 dark:text-gray-300 disabled:opacity-50"
+                    >
+                      {result.address}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase font-bold text-gray-400">
+                  <span className="bg-white dark:bg-[#1a1a1a] px-2">OR</span>
+                </div>
+              </div>
+
               <button
                 onClick={handleFetchLocation}
-                disabled={isFetchingLocation}
+                disabled={isFetchingLocation || locationLoading}
                 className="w-full px-6 py-3.5 rounded-xl font-bold bg-yellow-400 text-black hover:bg-yellow-500 transition-colors shadow-lg shadow-yellow-400/30 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isFetchingLocation ? (
+                {isFetchingLocation || locationLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                     Fetching...
@@ -232,13 +320,7 @@ export default function Header() {
                   "Use Current Location"
                 )}
               </button>
-              <button
-                onClick={() => setLocationModalOpen(false)}
-                disabled={isFetchingLocation}
-                className="w-full px-6 py-3.5 rounded-xl font-bold bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                Not Now
-              </button>
+
             </div>
           </div>
         </div>

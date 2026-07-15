@@ -4,3 +4,4 @@ export { createBusinessAuthRouter } from './business-auth.routes';
 export { createAdminRouter } from './admin.routes';
 export { createPostsRouter } from './posts.routes';
 export { createFlashDealsRouter } from './flash-deals.routes';
+export { createLocationRouter } from './location.routes';

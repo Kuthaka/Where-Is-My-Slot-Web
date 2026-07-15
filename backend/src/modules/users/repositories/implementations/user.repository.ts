@@ -32,6 +32,7 @@ export class MongooseUserRepository implements IUserRepository {
       isPasswordSet: user.isPasswordSet,
       role: user.role,
       isActive: user.isActive,
+      location: user.location,
     });
     return this.toDomain(created);
   }
@@ -45,6 +46,7 @@ export class MongooseUserRepository implements IUserRepository {
     if (data.isPasswordSet !== undefined) updateFields.isPasswordSet = data.isPasswordSet;
     if (data.role !== undefined) updateFields.role = data.role;
     if (data.isActive !== undefined) updateFields.isActive = data.isActive;
+    if (data.location !== undefined) updateFields.location = data.location;
 
     const updated = await UserModel.findByIdAndUpdate(
       id,
@@ -68,6 +70,7 @@ export class MongooseUserRepository implements IUserRepository {
       doc.isActive,
       doc.createdAt,
       doc.updatedAt,
+      doc.location
     );
   }
 }

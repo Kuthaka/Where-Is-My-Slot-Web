@@ -11,6 +11,7 @@ export const TYPES = {
     AdminService: Symbol.for("AdminService"),
     PostsService: Symbol.for("PostsService"),
     OtpService: Symbol.for("OtpService"),
+    LocationService: Symbol.for("LocationService"),
 
     // Controllers
     AuthController: Symbol.for("AuthController"),
@@ -18,4 +19,5 @@ export const TYPES = {
     AdminController: Symbol.for("AdminController"),
     PostsController: Symbol.for("PostsController"),
     FlashDealsController: Symbol.for("FlashDealsController"),
+    LocationController: Symbol.for("LocationController"),
 };

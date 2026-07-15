@@ -23,6 +23,8 @@ import { IPostsService } from '../../modules/posts/services/interfaces/posts.ser
 import { PostsService } from '../../modules/posts/services/implementations/posts.service';
 import { IOtpService } from '../../shared/services/interfaces/otp.service.interface';
 import { OtpService } from '../../shared/services/implementations/otp.service';
+import { ILocationService } from '../../modules/location/services/interfaces/location.service.interface';
+import { LocationService } from '../../modules/location/services/implementations/location.service';
 
 // Controllers
 import { IAuthController } from '../../modules/auth/controllers/interfaces/auth.controller.interface';
@@ -35,6 +37,8 @@ import { IPostsController } from '../../modules/posts/controllers/interfaces/pos
 import { PostsController } from '../../modules/posts/controllers/implementations/posts.controller';
 import { IFlashDealsController } from '../../modules/posts/controllers/interfaces/flash-deals.controller.interface';
 import { FlashDealsController } from '../../modules/posts/controllers/implementations/flash-deals.controller';
+import { ILocationController } from '../../modules/location/controllers/interfaces/location.controller.interface';
+import { LocationController } from '../../modules/location/controllers/implementations/location.controller';
 
 const container = new Container();
 
@@ -50,6 +54,7 @@ container.bind<IBusinessesService>(TYPES.BusinessesService).to(BusinessesService
 container.bind<IAdminService>(TYPES.AdminService).to(AdminService);
 container.bind<IPostsService>(TYPES.PostsService).to(PostsService);
 container.bind<IOtpService>(TYPES.OtpService).to(OtpService);
+container.bind<ILocationService>(TYPES.LocationService).to(LocationService);
 
 // Controllers
 container.bind<IAuthController>(TYPES.AuthController).to(AuthController);
@@ -57,5 +62,6 @@ container.bind<IBusinessesController>(TYPES.BusinessesController).to(BusinessesC
 container.bind<IAdminController>(TYPES.AdminController).to(AdminController);
 container.bind<IPostsController>(TYPES.PostsController).to(PostsController);
 container.bind<IFlashDealsController>(TYPES.FlashDealsController).to(FlashDealsController);
+container.bind<ILocationController>(TYPES.LocationController).to(LocationController);
 
 export { container };

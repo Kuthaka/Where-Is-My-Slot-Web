@@ -10,6 +10,11 @@ export interface IUserDocument extends Document {
   isPasswordSet: boolean;
   role: string;
   isActive: boolean;
+  location?: {
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +28,11 @@ const UserSchema = new Schema<IUserDocument>(
     isPasswordSet: { type: Boolean, default: false },
     role: { type: String, default: 'USER' },
     isActive: { type: Boolean, default: true },
+    location: {
+      address: String,
+      latitude: Number,
+      longitude: Number,
+    },
   },
   { timestamps: true }
 );
