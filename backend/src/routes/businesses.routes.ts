@@ -18,6 +18,8 @@ export function createBusinessesRouter(businessesController: IBusinessesControll
     businessesController.getMyBusiness.bind(businessesController)
   );
 
+  router.get('/:id', businessesController.getBusinessById.bind(businessesController));
+
   router.patch(
     '/me',
     authenticate,

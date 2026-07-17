@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from '../../../../shared/middleware/auth.middlew
 
 export interface IBusinessesController {
   exploreBusinesses(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getBusinessById(req: Request, res: Response, next: NextFunction): Promise<void>;
   getMyBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
   updateMyBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
   onboardBusiness(req: Request, res: Response, next: NextFunction): Promise<void>;

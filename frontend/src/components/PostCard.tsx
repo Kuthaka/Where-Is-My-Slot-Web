@@ -1,4 +1,5 @@
 import { MoreHorizontal, Heart, MessageCircle, Send, Bookmark, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 interface PostCardProps {
@@ -26,13 +27,14 @@ function getShortTime(dateString: string) {
 
 export default function PostCard({ post, onLike, onCommentClick, onShare, renderMenu, children, hideCaption }: PostCardProps) {
   const username = post.business?.username || post.business?.name?.toLowerCase().replace(/\s+/g, '');
+  const businessId = post.business?.id || post.businessId || post.business?._id;
 
   return (
     <article className="bg-white dark:bg-[#242424] rounded-[28px] overflow-hidden w-full mb-6 border border-gray-100 dark:border-gray-800 shadow-sm pb-2">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-fuchsia-600 p-[2px]">
+          <Link href={`/b/${businessId}`} className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-fuchsia-600 p-[2px]">
             <div className="w-full h-full rounded-full overflow-hidden border-2 border-white dark:border-[#242424] bg-gray-100 dark:bg-gray-800">
               {post.business?.logo ? (
                 <img src={post.business.logo} alt={post.business.name} className="w-full h-full object-cover" />
@@ -42,11 +44,11 @@ export default function PostCard({ post, onLike, onCommentClick, onShare, render
                 </div>
               )}
             </div>
-          </div>
+          </Link>
           <div className="flex items-center gap-1">
-            <span className="text-[14px] font-semibold text-gray-900 dark:text-white hover:opacity-70 cursor-pointer">
+            <Link href={`/b/${businessId}`} className="text-[14px] font-semibold text-gray-900 dark:text-white hover:underline cursor-pointer">
               {username}
-            </span>
+            </Link>
             {post.business?.isVerified && <CheckCircle2 size={12} className="text-blue-500 fill-current" />}
             <span className="text-gray-400 dark:text-gray-500 mx-1">•</span>
             <span className="text-gray-400 dark:text-gray-500 text-[14px]">{getShortTime(post.createdAt)}</span>

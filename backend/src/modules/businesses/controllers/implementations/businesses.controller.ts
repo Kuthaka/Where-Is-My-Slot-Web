@@ -80,6 +80,20 @@ export class BusinessesController implements IBusinessesController {
     }
   }
 
+  // ─── Public: Get Business by ID ──────────────────────────────────────────────
+  async getBusinessById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const business = await this.businessRepository.findById(id);
+      if (!business) throw new NotFoundError('Business not found');
+      
+      const { passwordHash, ...safeProps } = business.props;
+      sendSuccess(res, safeProps);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   // ─── Authenticated Business: Get My Business ──────────────────────────────────
   async getMyBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
