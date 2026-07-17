@@ -9,6 +9,8 @@ import {
   Coffee, Dumbbell, ShoppingBag, Scissors, Car, Utensils,
   Building2, Heart, BookOpen, Music, Wifi, Package
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const API_URL = "http://localhost:5000/api/v1";
 
@@ -179,6 +181,13 @@ export default function ExplorePage() {
 
   const observer = useRef<IntersectionObserver | null>(null);
 
+  const { currentLocation } = useSelector((state: RootState) => state.location);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
@@ -192,21 +201,27 @@ export default function ExplorePage() {
       if (cursor) params.append("cursor", cursor);
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (activeCategory !== "All") params.append("category", activeCategory);
+      if (currentLocation?.address) {
+        // Extract main city name (e.g. "Kochi" from "Kochi, Kerala")
+        const city = currentLocation.address.split(",")[0].trim();
+        params.append("city", city);
+      }
 
       const res = await fetch(`${API_URL}/businesses/explore?${params}`);
       const data = await res.json();
       if (res.ok) {
-        const items: any[] = Array.isArray(data.businesses) ? data.businesses : [];
+        const payload = data.data || data;
+        const items: any[] = Array.isArray(payload.businesses) ? payload.businesses : [];
         setBusinesses(prev => reset ? items : [...prev, ...items]);
-        setNextCursor(data.nextCursor ?? null);
-        setHasMore(!!data.hasMore);
+        setNextCursor(payload.nextCursor ?? null);
+        setHasMore(!!payload.hasMore);
       }
     } catch (err) {
       console.error('[Explore] Failed to fetch businesses:', err);
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, activeCategory]);
+  }, [debouncedSearch, activeCategory, currentLocation]);
 
   // Fetch businesses when filters change
   useEffect(() => {
@@ -214,7 +229,7 @@ export default function ExplorePage() {
     setNextCursor(null);
     setHasMore(true);
     fetchBusinesses(undefined, true);
-  }, [debouncedSearch, activeCategory]);
+  }, [debouncedSearch, activeCategory, currentLocation]);
 
   // Fetch flash deals
   useEffect(() => {
@@ -287,7 +302,7 @@ export default function ExplorePage() {
           <div className="mb-6">
             <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-1 flex items-center gap-2">
               <TrendingUp className="text-yellow-500" size={28} />
-              Explore
+              Explore {mounted && currentLocation?.address ? `in ${currentLocation.address.split(",")[0]}` : ""}
             </h1>
             <p className="text-gray-500 font-medium mb-4">Discover the best local businesses near you</p>
             <div className="relative">

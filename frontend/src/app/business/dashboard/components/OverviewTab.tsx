@@ -6,8 +6,11 @@ import { toast } from "react-hot-toast";
 import CreatePostModal from "@/components/CreatePostModal";
 import PostCard from "@/components/PostCard";
 import { useModal } from "@/components/ModalProvider";
+import { useDashboard } from "../layout";
+import Link from "next/link";
 
 export default function OverviewTab({ business, user }: { business: any, user?: any }) {
+  const { setBusiness } = useDashboard();
   const [posts, setPosts] = useState<any[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -219,6 +222,15 @@ export default function OverviewTab({ business, user }: { business: any, user?: 
               ) : (
                 <span className="text-4xl font-black text-gray-300">{business.name?.charAt(0)}</span>
               )}
+            </div>
+            <div className="ml-auto mt-2">
+              <Link 
+                href="/business/dashboard/profile/edit"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1a1a1a] hover:bg-yellow-400 dark:hover:bg-yellow-500 hover:text-black text-gray-700 dark:text-gray-300 font-bold text-sm rounded-xl transition-colors border border-gray-200 dark:border-gray-800"
+              >
+                <Edit2 size={16} />
+                Edit Profile
+              </Link>
             </div>
           </div>
           <div className="mt-16">

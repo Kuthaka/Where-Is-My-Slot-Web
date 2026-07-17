@@ -32,9 +32,13 @@ export class BusinessesController implements IBusinessesController {
   // ─── Public: Explore ──────────────────────────────────────────────────────────
   async exploreBusinesses(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { search, category, cursor, limit } = req.query as Record<string, string>;
+      const { search, category, city, cursor, limit } = req.query as Record<string, string>;
       const take = limit ? Math.min(parseInt(limit, 10), 20) : 12;
       const where: Record<string, unknown> = { status: 'APPROVED' };
+
+      if (city) {
+        where.city = { $regex: city, $options: 'i' };
+      }
 
       if (search) {
         where.$or = [
@@ -113,8 +117,25 @@ export class BusinessesController implements IBusinessesController {
         businessId = businesses[0].props.id;
       }
 
-      // Bypass service and update directly in repository since service uses ownerId logic
-      const updateData = { props: { ...req.body } };
+      // Handle base64 image uploads
+      let { logo, coverPhoto, ...otherProps } = req.body;
+
+      if (logo && logo.startsWith('data:image')) {
+        const base64Data = logo.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        logo = await uploadBuffer(buffer);
+      }
+
+      if (coverPhoto && coverPhoto.startsWith('data:image')) {
+        const base64Data = coverPhoto.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        coverPhoto = await uploadBuffer(buffer);
+      }
+
+      const updateData = { props: { ...otherProps } };
+      if (logo) updateData.props.logo = logo;
+      if (coverPhoto) updateData.props.coverPhoto = coverPhoto;
+
       const updated = await this.businessRepository.update(businessId, updateData as any);
       
       const { passwordHash, ...safeProps } = updated.props;
