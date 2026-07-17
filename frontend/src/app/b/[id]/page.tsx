@@ -6,10 +6,13 @@ import { CheckCircle2, MapPin, Phone, Mail, Globe, Clock, Info, Check, ArrowLeft
 import Header from "@/components/Header";
 import PostCard from "@/components/PostCard";
 import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function PublicBusinessProfile() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useSelector((state: RootState) => state.auth);
   
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +35,15 @@ export default function PublicBusinessProfile() {
         const res = await fetch(`http://localhost:5000/api/v1/businesses/${id}`);
         if (!res.ok) throw new Error("Business not found");
         const data = await res.json();
-        setBusiness(data.data || data);
+        const bizData = data.data || data;
+
+        // Redirect if viewing own profile
+        if (user && (user.id === bizData.id || user.id === bizData.ownerId)) {
+          router.replace("/business/dashboard");
+          return;
+        }
+
+        setBusiness(bizData);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load business profile");
@@ -42,7 +53,7 @@ export default function PublicBusinessProfile() {
       }
     };
     if (id) fetchBusiness();
-  }, [id, router]);
+  }, [id, router, user]);
 
   const fetchPosts = async (cursor?: string) => {
     if (loadingPosts || (!hasMore && cursor)) return;

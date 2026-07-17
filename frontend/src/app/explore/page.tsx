@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import LeftSidebar from "@/components/Home/LeftSidebar";
 import {
@@ -77,91 +78,79 @@ function BusinessCard({ biz, onFlashClick }: { biz: any; onFlashClick: () => voi
   const gradient = getCategoryGradient(biz.primaryCategory);
 
   return (
-    <article className="bg-white dark:bg-[#242424] rounded-[28px] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group cursor-pointer">
-      {/* Cover / Banner */}
-      <div className={`relative h-[140px] bg-gradient-to-br ${gradient} overflow-hidden`}>
-        {biz.coverPhoto ? (
-          <img src={biz.coverPhoto} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        ) : (
-          <div className={`w-full h-full bg-gradient-to-br ${gradient} opacity-80`} />
-        )}
-        {/* Active Flash Deal Badge */}
-        {hasActiveDeal && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onFlashClick(); }}
-            className="absolute top-3 right-3 flex items-center gap-1.5 bg-yellow-400 text-black text-[11px] font-black px-2.5 py-1 rounded-full shadow-lg animate-pulse-slow hover:scale-110 transition-transform"
-          >
-            <Zap size={10} className="fill-current" />
-            LIVE DEAL
-          </button>
-        )}
-        {biz.isVerified && (
-          <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/60 backdrop-blur-sm text-blue-500 text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-            <CheckCircle2 size={10} className="fill-current" />
-            Verified
-          </div>
-        )}
-      </div>
-
-      <div className="px-4 pb-4">
-        {/* Logo + Name Row */}
-        <div className="flex items-end gap-3 -mt-7 mb-3">
-          <div className={`w-14 h-14 rounded-2xl border-4 border-white dark:border-[#242424] shadow-md overflow-hidden bg-gradient-to-br ${gradient} shrink-0`}>
-            {biz.logo ? (
-              <img src={biz.logo} alt={biz.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white font-black text-xl">
-                {biz.name?.charAt(0)}
-              </div>
-            )}
-          </div>
-          <div className="flex-1 pb-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="font-black text-gray-900 dark:text-white text-[15px] leading-tight truncate">{biz.name}</h3>
-              {biz.isVerified && <CheckCircle2 size={13} className="text-blue-500 fill-current shrink-0" />}
-            </div>
-            {biz.primaryCategory && (
-              <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide">{biz.primaryCategory}</span>
-            )}
-          </div>
-        </div>
-
-        {/* Tagline */}
-        {biz.tagline && (
-          <p className="text-[13px] text-gray-600 dark:text-gray-400 leading-snug mb-3 line-clamp-2">{biz.tagline}</p>
-        )}
-
-        {/* Stats Row */}
-        <div className="flex items-center gap-3 text-[11px] font-bold text-gray-400 dark:text-gray-500 mb-3">
-          {(biz.area || biz.city) && (
-            <span className="flex items-center gap-1">
-              <MapPin size={11} className="text-yellow-500" />
-              {[biz.area, biz.city].filter(Boolean).join(", ")}
-            </span>
+    <Link href={`/b/${biz.id || biz._id}`} className="block h-full">
+      <article className="bg-white dark:bg-[#242424] rounded-[28px] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 group cursor-pointer h-full flex flex-col">
+        {/* Cover / Banner */}
+        <div className={`relative h-[160px] bg-gradient-to-br ${gradient} overflow-hidden shrink-0`}>
+          {biz.coverPhoto ? (
+            <img src={biz.coverPhoto} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${gradient} opacity-80`} />
           )}
-          <span className="flex items-center gap-1">
-            <Store size={11} />
-            {biz._count?.posts || 0} posts
-          </span>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-1">
-          <button className="flex-1 py-2.5 bg-gray-100 dark:bg-[#333] hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-black text-gray-700 dark:text-gray-300 font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5">
-            <Store size={13} />
-            View Profile
-          </button>
-          {biz.googleMapsUrl && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+          
+          {/* Active Flash Deal Badge */}
+          {hasActiveDeal && (
             <button
-              onClick={() => window.open(biz.googleMapsUrl, '_blank')}
-              className="px-3 py-2.5 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white font-bold text-xs rounded-xl transition-all duration-200"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onFlashClick(); }}
+              className="absolute top-3 right-3 flex items-center gap-1.5 bg-yellow-400 text-black text-[11px] font-black px-2.5 py-1 rounded-full shadow-lg animate-pulse-slow hover:scale-110 transition-transform z-10"
             >
-              <MapPin size={13} />
+              <Zap size={10} className="fill-current" />
+              LIVE DEAL
             </button>
           )}
         </div>
-      </div>
-    </article>
+
+        <div className="px-5 pb-5 flex-1 flex flex-col">
+          {/* Logo + Name Row */}
+          <div className="flex items-end gap-3 -mt-10 mb-4 relative z-10">
+            <div className={`w-20 h-20 rounded-2xl border-4 border-white dark:border-[#242424] shadow-md overflow-hidden bg-gradient-to-br ${gradient} shrink-0`}>
+              {biz.logo ? (
+                <img src={biz.logo} alt={biz.name} className="w-full h-full object-cover bg-white" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white font-black text-2xl">
+                  {biz.name?.charAt(0)}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 pb-1 min-w-0">
+              {biz.primaryCategory && (
+                <span className="inline-block px-2.5 py-1 bg-yellow-50 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 text-[10px] font-black uppercase tracking-wider rounded-lg mb-1.5">
+                  {biz.primaryCategory}
+                </span>
+              )}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="font-black text-gray-900 dark:text-white text-lg leading-tight truncate group-hover:text-yellow-500 transition-colors">{biz.name}</h3>
+                {biz.isVerified && <CheckCircle2 size={16} className="text-blue-500 fill-current shrink-0" />}
+              </div>
+            </div>
+          </div>
+
+          {/* Tagline */}
+          {biz.tagline ? (
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-snug mb-4 line-clamp-2 flex-1">{biz.tagline}</p>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-500 italic leading-snug mb-4 line-clamp-2 flex-1">
+              {biz.description || "No description provided."}
+            </p>
+          )}
+
+          {/* Stats Row */}
+          <div className="flex items-center gap-3 text-xs font-bold text-gray-500 dark:text-gray-400 mt-auto pt-4 border-t border-gray-100 dark:border-gray-800/50">
+            {(biz.area || biz.city) && (
+              <span className="flex items-center gap-1.5">
+                <MapPin size={14} className="text-yellow-500" />
+                <span className="truncate max-w-[120px]">{[biz.area, biz.city].filter(Boolean).join(", ")}</span>
+              </span>
+            )}
+            <span className="flex items-center gap-1.5 ml-auto">
+              <Store size={14} />
+              {biz._count?.posts || 0} posts
+            </span>
+          </div>
+        </div>
+      </article>
+    </Link>
   );
 }
 
