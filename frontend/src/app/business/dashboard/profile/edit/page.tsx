@@ -6,6 +6,10 @@ import Cropper from "react-easy-crop";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useDashboard } from "../../layout";
+import dynamic from "next/dynamic";
+import { MapPin } from "lucide-react";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
 const createImage = (url: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
@@ -50,6 +54,9 @@ export default function EditProfilePage() {
   const [phone, setPhone] = useState("");
   const [logo, setLogo] = useState("");
   const [coverPhoto, setCoverPhoto] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -69,6 +76,11 @@ export default function EditProfilePage() {
       setPhone(business.phone || "");
       setLogo(business.logo || "");
       setCoverPhoto(business.coverPhoto || "");
+      setAddress(business.address || "");
+      setCity(business.city || "");
+      if (business.latitude && business.longitude) {
+        setLocation({ lat: business.latitude, lng: business.longitude });
+      }
     }
   }, [business]);
 
@@ -111,7 +123,17 @@ export default function EditProfilePage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, description, phone, logo, coverPhoto }),
+        body: JSON.stringify({ 
+          name, 
+          description, 
+          phone, 
+          logo, 
+          coverPhoto,
+          address,
+          city,
+          latitude: location?.lat,
+          longitude: location?.lng
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -199,6 +221,33 @@ export default function EditProfilePage() {
             <div>
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Description / Tagline</label>
               <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white resize-none" />
+            </div>
+          </div>
+
+          {/* Location Info */}
+          <div className="space-y-6 pt-4 border-t border-gray-100 dark:border-gray-800">
+            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+              <MapPin size={20} className="text-yellow-500" /> Location Details
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Address</label>
+                <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main St, Floor 2" className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">City</label>
+                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. New York" className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Pin on Map (Required for Discovery)</label>
+              <div className="relative z-0">
+                <MapPicker position={location} setPosition={setLocation} />
+              </div>
+              <p className="text-xs text-gray-500 mt-2 font-bold">Click on the map to set your exact business location.</p>
             </div>
           </div>
         </div>

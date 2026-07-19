@@ -6,6 +6,10 @@ import { Search, MapPin, Car, Store, Navigation, Users, Filter } from "lucide-re
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { Map, List } from "lucide-react";
+
+const ParkingMapView = dynamic(() => import("@/components/ParkingMapView"), { ssr: false });
 
 const API_URL = "http://localhost:5000/api/v1";
 
@@ -14,6 +18,7 @@ export default function ParkingPage() {
   const [loading, setLoading] = useState(false);
   const { currentLocation } = useSelector((state: RootState) => state.location);
   const [activeFilter, setActiveFilter] = useState("ALL"); // ALL, FREE, BUSINESS, COMMUNITY
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -127,28 +132,52 @@ export default function ParkingPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-          <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl text-gray-500">
-            <Filter size={16} />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl text-gray-500">
+              <Filter size={16} />
+            </div>
+            {['ALL', 'FREE', 'BUSINESS', 'COMMUNITY'].map(filter => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                  activeFilter === filter 
+                  ? 'bg-yellow-400 text-black shadow-sm' 
+                  : 'bg-white dark:bg-[#242424] text-gray-600 dark:text-gray-300 hover:bg-gray-50 border border-gray-200 dark:border-gray-800'
+                }`}
+              >
+                {filter === 'ALL' ? 'All Parking' : filter === 'FREE' ? 'Free Only' : filter === 'BUSINESS' ? 'Business Lots' : 'Community'}
+              </button>
+            ))}
           </div>
-          {['ALL', 'FREE', 'BUSINESS', 'COMMUNITY'].map(filter => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                activeFilter === filter 
-                ? 'bg-yellow-400 text-black shadow-sm' 
-                : 'bg-white dark:bg-[#242424] text-gray-600 dark:text-gray-300 hover:bg-gray-50 border border-gray-200 dark:border-gray-800'
-              }`}
+
+          {/* View Toggle */}
+          <div className="flex items-center bg-white dark:bg-[#242424] border border-gray-200 dark:border-gray-800 rounded-xl p-1 shadow-sm shrink-0">
+            <button 
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              {filter === 'ALL' ? 'All Parking' : filter === 'FREE' ? 'Free Only' : filter === 'BUSINESS' ? 'Business Lots' : 'Community'}
+              <List size={16} /> List
             </button>
-          ))}
+            <button 
+              onClick={() => setViewMode("map")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'map' ? 'bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              <Map size={16} /> Map
+            </button>
+          </div>
         </div>
 
-        {/* Grid */}
-        {loading ? (
+        {/* Content */}
+        {viewMode === 'map' ? (
+          <div className="w-full">
+            <ParkingMapView parkings={parkings} currentLocation={currentLocation} />
+          </div>
+        ) : (
+          <>
+            {/* Grid */}
+            {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="h-[180px] bg-gray-100 dark:bg-[#242424] animate-pulse rounded-3xl"></div>
@@ -166,6 +195,8 @@ export default function ParkingPage() {
             <h3 className="text-xl font-black mb-2">No parking spots found</h3>
             <p className="text-gray-500 max-w-sm mx-auto">We couldn't find any parking locations matching your criteria nearby.</p>
           </div>
+        )}
+          </>
         )}
       </div>
     </main>

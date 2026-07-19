@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
 export default function ParkingTab({ business }: { business: any }) {
   const [parking, setParking] = useState<any>(null);
@@ -15,13 +18,17 @@ export default function ParkingTab({ business }: { business: any }) {
   // Real-time slot management state
   const [occupiedCars, setOccupiedCars] = useState(0);
 
-  // Form State
   const [formData, setFormData] = useState({
-    name: business?.name + " Parking" || "",
+    name: business?.name ? `${business.name} Parking` : "",
     totalCarSlots: 50,
     pricingType: "FREE",
     type: "OPEN"
   });
+  const [parkingLocation, setParkingLocation] = useState<{lat: number, lng: number} | null>(
+    business?.latitude && business?.longitude 
+      ? { lat: business.latitude, lng: business.longitude } 
+      : null
+  );
 
   const fetchParking = async () => {
     try {
@@ -55,7 +62,7 @@ export default function ParkingTab({ business }: { business: any }) {
         city: business.city || "",
         location: {
           type: "Point",
-          coordinates: [business.longitude || 0, business.latitude || 0]
+          coordinates: parkingLocation ? [parkingLocation.lng, parkingLocation.lat] : [business.longitude || 0, business.latitude || 0]
         },
         pricingType: formData.pricingType,
         type: [formData.type],
@@ -165,6 +172,13 @@ export default function ParkingTab({ business }: { business: any }) {
                 <option value="VALET">Valet</option>
               </select>
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 mt-4">Parking Location on Map</label>
+            <div className="relative z-0">
+              <MapPicker position={parkingLocation} setPosition={setParkingLocation} />
+            </div>
+            <p className="text-xs text-gray-500 mt-2 font-bold">Drag or click to adjust the exact location of the parking lot.</p>
           </div>
           <div className="flex gap-3 pt-4">
             <button onClick={() => setIsCreating(false)} className="px-6 py-3 bg-gray-100 dark:bg-[#333] font-bold rounded-xl flex-1 hover:bg-gray-200">Cancel</button>
