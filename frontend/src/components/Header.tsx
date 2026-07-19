@@ -170,9 +170,10 @@ export default function Header() {
               <Compass size={24} className={pathname === '/explore' ? 'fill-current' : ''} />
               {pathname === '/explore' && <div className="w-1 h-1 rounded-full bg-yellow-400"></div>}
             </Link>
-            <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Parking">
-              <Car size={24} />
-            </button>
+            <Link href="/parking" className={`flex flex-col items-center gap-1 group transition-colors ${pathname === '/parking' ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'}`} title="Parking">
+              <Car size={24} className={pathname === '/parking' ? 'fill-current' : ''} />
+              {pathname === '/parking' && <div className="w-1 h-1 rounded-full bg-yellow-400"></div>}
+            </Link>
             <button className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" title="Saved">
               <Bookmark size={24} />
             </button>

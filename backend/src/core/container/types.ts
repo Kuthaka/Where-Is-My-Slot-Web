@@ -4,6 +4,7 @@ export const TYPES = {
     BusinessRepository: Symbol.for("BusinessRepository"),
     PostRepository: Symbol.for("PostRepository"),
     OtpRepository: Symbol.for("OtpRepository"),
+    ParkingRepository: Symbol.for("ParkingRepository"),
 
     // Services
     AuthService: Symbol.for("AuthService"),
@@ -12,6 +13,7 @@ export const TYPES = {
     PostsService: Symbol.for("PostsService"),
     OtpService: Symbol.for("OtpService"),
     LocationService: Symbol.for("LocationService"),
+    ParkingService: Symbol.for("ParkingService"),
 
     // Controllers
     AuthController: Symbol.for("AuthController"),
@@ -20,4 +22,5 @@ export const TYPES = {
     PostsController: Symbol.for("PostsController"),
     FlashDealsController: Symbol.for("FlashDealsController"),
     LocationController: Symbol.for("LocationController"),
+    ParkingController: Symbol.for("ParkingController"),
 };

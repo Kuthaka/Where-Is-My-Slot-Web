@@ -40,6 +40,14 @@ import { FlashDealsController } from '../../modules/posts/controllers/implementa
 import { ILocationController } from '../../modules/location/controllers/interfaces/location.controller.interface';
 import { LocationController } from '../../modules/location/controllers/implementations/location.controller';
 
+// Parking Imports
+import { IParkingRepository } from '../../modules/parking/repositories/interfaces/parking.repository.interface';
+import { ParkingRepository } from '../../modules/parking/repositories/implementations/parking.repository';
+import { IParkingService } from '../../modules/parking/services/interfaces/parking.service.interface';
+import { ParkingService } from '../../modules/parking/services/implementations/parking.service';
+import { IParkingController } from '../../modules/parking/controllers/interfaces/parking.controller.interface';
+import { ParkingController } from '../../modules/parking/controllers/implementations/parking.controller';
+
 const container = new Container();
 
 // Repositories
@@ -47,6 +55,7 @@ container.bind<IUserRepository>(TYPES.UserRepository).to(MongooseUserRepository)
 container.bind<IBusinessRepository>(TYPES.BusinessRepository).to(MongooseBusinessRepository);
 container.bind<IPostRepository>(TYPES.PostRepository).to(MongoosePostRepository);
 container.bind<IOtpRepository>(TYPES.OtpRepository).to(MongooseOtpRepository);
+container.bind<IParkingRepository>(TYPES.ParkingRepository).to(ParkingRepository);
 
 // Services
 container.bind<IAuthService>(TYPES.AuthService).to(AuthService);
@@ -55,6 +64,7 @@ container.bind<IAdminService>(TYPES.AdminService).to(AdminService);
 container.bind<IPostsService>(TYPES.PostsService).to(PostsService);
 container.bind<IOtpService>(TYPES.OtpService).to(OtpService);
 container.bind<ILocationService>(TYPES.LocationService).to(LocationService);
+container.bind<IParkingService>(TYPES.ParkingService).to(ParkingService);
 
 // Controllers
 container.bind<IAuthController>(TYPES.AuthController).to(AuthController);
@@ -63,5 +73,6 @@ container.bind<IAdminController>(TYPES.AdminController).to(AdminController);
 container.bind<IPostsController>(TYPES.PostsController).to(PostsController);
 container.bind<IFlashDealsController>(TYPES.FlashDealsController).to(FlashDealsController);
 container.bind<ILocationController>(TYPES.LocationController).to(LocationController);
+container.bind<IParkingController>(TYPES.ParkingController).to(ParkingController);
 
 export { container };

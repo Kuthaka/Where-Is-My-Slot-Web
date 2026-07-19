@@ -11,6 +11,7 @@ import { IAdminController } from './modules/admin/controllers/interfaces/admin.c
 import { IPostsController } from './modules/posts/controllers/interfaces/posts.controller.interface';
 import { IFlashDealsController } from './modules/posts/controllers/interfaces/flash-deals.controller.interface';
 import { ILocationController } from './modules/location/controllers/interfaces/location.controller.interface';
+import { IParkingController } from './modules/parking/controllers/interfaces/parking.controller.interface';
 
 // ─── Container ─────────────────────────────────────────────────────────────────
 import { container } from './core/container/inversify';
@@ -25,6 +26,7 @@ import {
   createPostsRouter,
   createFlashDealsRouter,
   createLocationRouter,
+  createParkingRouter,
 } from './routes';
 
 
@@ -46,6 +48,7 @@ export function createApp(): Application {
   const postsController = container.get<IPostsController>(TYPES.PostsController);
   const flashDealsController = container.get<IFlashDealsController>(TYPES.FlashDealsController);
   const locationController = container.get<ILocationController>(TYPES.LocationController);
+  const parkingController = container.get<IParkingController>(TYPES.ParkingController);
 
   // ── Health Check ─────────────────────────────────────────────────────────────
   app.get('/api/v1/health', (_req, res) => {
@@ -106,6 +109,7 @@ export function createApp(): Application {
   app.use('/api/v1/posts', createPostsRouter(postsController));
   app.use('/api/v1/flash-deals', createFlashDealsRouter(flashDealsController));
   app.use('/api/v1/location', createLocationRouter(locationController));
+  app.use('/api/v1/parking', createParkingRouter(parkingController));
 
   // ── 404 Handler ───────────────────────────────────────────────────────────────
   app.use((_req, res) => {
