@@ -161,7 +161,7 @@ export default function PostsTab({ business, user }: { business: any, user?: any
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar px-2">
             {flashDeals.map((deal, i) => (
               <div 
-                key={deal.id} 
+                key={deal.id || deal._id || `flash-deal-${i}`} 
                 onClick={() => setActiveFlashIndex(i)}
                 className="flex flex-col items-center gap-2 shrink-0 cursor-pointer group"
               >
