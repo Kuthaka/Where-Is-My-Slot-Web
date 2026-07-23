@@ -32,6 +32,7 @@ export interface IBusinessDocument extends Document {
   area?: string;
   city?: string;
   state?: string;
+  country?: string;
   latitude?: number;
   longitude?: number;
   googleMapsUrl?: string;
@@ -40,10 +41,19 @@ export interface IBusinessDocument extends Document {
   subCategories: string[];
   amenities: string[];
   parking?: Record<string, unknown>;
+  petPolicy?: string;
+  seating: string[];
+  paymentModes: string[];
   logo?: string;
   coverPhoto?: string;
   images: string[];
+  videos: string[];
+  menus: string[];
+  services: Record<string, unknown>[];
+  products: Record<string, unknown>[];
   socialLinks?: Record<string, unknown>;
+  businessRegistrationProof?: string;
+  ownerIdProof?: string;
   isVerified: boolean;
   status: string;
   createdAt: Date;
@@ -85,16 +95,28 @@ const BusinessSchema = new Schema<IBusinessDocument>(
     longitude: Number,
     googleMapsUrl: String,
     timings: { type: Schema.Types.Mixed },
-    primaryCategory: String,
-    subCategories: { type: [String], default: [] },
-    amenities: { type: [String], default: [] },
+    primaryCategory: { type: String },
+    subCategories: [{ type: String }],
+    amenities: [{ type: String }],
     parking: { type: Schema.Types.Mixed },
-    logo: String,
-    coverPhoto: String,
-    images: { type: [String], default: [] },
+    petPolicy: { type: String },
+    seating: [{ type: String }],
+    paymentModes: [{ type: String }],
+    // Rich media
+    logo: { type: String },
+    coverPhoto: { type: String },
+    images: [{ type: String }],
+    videos: [{ type: String }],
+    // Services / Products
+    menus: [{ type: String }],
+    services: [{ type: Schema.Types.Mixed }],
+    products: [{ type: Schema.Types.Mixed }],
     socialLinks: { type: Schema.Types.Mixed },
+    // Verification
+    businessRegistrationProof: { type: String },
+    ownerIdProof: { type: String },
     isVerified: { type: Boolean, default: false },
-    status: { type: String, default: 'PENDING' },
+    status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' },
   },
   { timestamps: true }
 );

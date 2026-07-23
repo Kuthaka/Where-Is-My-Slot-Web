@@ -5,6 +5,7 @@ import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
 import { sendSuccess, sendCreated } from '../../shared/middleware/response.middleware';
 import { BadRequestError, NotFoundError } from '../../shared/errors/app-error';
 import { catchAsync } from '../../shared/utils/catch-async';
+import { BusinessOnboardingSchema } from '../../validations/business/onboarding.schema';
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../core/container/types';
@@ -60,6 +61,7 @@ export class BusinessesController implements IBusinessesController {
 
   // ─── Authenticated Business: Update ──────────────────────────────────────────
   updateMyBusiness = catchAsync(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    // Note: Can use a partial schema here if needed, but for now we validate on onboard
     const isBusinessUser = req.user!.type === 'business';
     const updated = await this.businessesService.updateMyBusiness(req.user!.id, isBusinessUser, req.body);
     
@@ -69,6 +71,11 @@ export class BusinessesController implements IBusinessesController {
 
   // ─── Public: Onboard (Register) ───────────────────────────────────────────────
   onboardBusiness = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const parseResult = BusinessOnboardingSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      throw new BadRequestError('Validation failed: ' + parseResult.error.errors.map(e => e.message).join(', '));
+    }
+
     const { business, accessToken } = await this.businessesService.onboardBusiness(req.body);
     const { passwordHash: _, ...safeProps } = business;
     sendCreated(res, { business: safeProps, accessToken });

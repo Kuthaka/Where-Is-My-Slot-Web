@@ -1,149 +1,169 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
-import { Upload, Camera, ImageIcon, ArrowLeft } from "lucide-react";
-import Cropper from "react-easy-crop";
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeft, Building2, Phone, Mail, Globe, MapPin,
+  MessageCircle, Clock, Car, CreditCard, Users,
+  PawPrint, Sparkles, AtSign, Share2, Globe2, Save, Check
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useDashboard } from "../../layout";
 import dynamic from "next/dynamic";
-import { MapPin } from "lucide-react";
+import ImageUploadWithCrop from "@/components/ImageUploadWithCrop";
+import TimingsPicker, { TimingsData } from "@/components/TimingsPicker";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
-const createImage = (url: string) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener("load", () => resolve(image));
-    image.addEventListener("error", (error) => reject(error));
-    image.setAttribute("crossOrigin", "anonymous");
-    image.src = url;
-  });
+// ─── Styled input helper ──────────────────────────────────────────────────────
+const inputCls = "w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30 transition-all text-gray-900 dark:text-white placeholder:text-gray-400";
 
-async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<string> {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) return "";
-
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
+function SectionCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="bg-white dark:bg-[#242424] rounded-[28px] border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-xl bg-yellow-400/10 flex items-center justify-center text-yellow-500 shrink-0">
+          {icon}
+        </div>
+        <h2 className="font-black text-gray-900 dark:text-white">{title}</h2>
+      </div>
+      <div className="p-6 space-y-5">{children}</div>
+    </div>
   );
-
-  return canvas.toDataURL("image/jpeg");
 }
 
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">{children}</label>;
+}
+
+// Multi-chip toggle (for amenities, payment modes, seating)
+function ChipGroup({ options, selected, onChange, color = "yellow" }: {
+  options: string[];
+  selected: string[];
+  onChange: (val: string[]) => void;
+  color?: "yellow" | "green" | "blue";
+}) {
+  const colorMap: Record<string, string> = {
+    yellow: "bg-yellow-400 text-black ring-yellow-400",
+    green: "bg-green-500 text-white ring-green-500",
+    blue: "bg-blue-500 text-white ring-blue-500",
+  };
+  const toggle = (opt: string) => {
+    onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt]);
+  };
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map(opt => {
+        const active = selected.includes(opt);
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => toggle(opt)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+              active
+                ? `${colorMap[color]} border-transparent shadow-sm`
+                : "bg-gray-50 dark:bg-[#1a1a1a] border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400"
+            }`}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function EditProfilePage() {
   const router = useRouter();
   const { business, setBusiness } = useDashboard();
-  
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [phone, setPhone] = useState("");
-  const [logo, setLogo] = useState("");
-  const [coverPhoto, setCoverPhoto] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
-
   const [loading, setLoading] = useState(false);
 
-  // Cropper states
-  const [cropModalOpen, setCropModalOpen] = useState(false);
-  const [cropImage, setCropImage] = useState("");
-  const [cropType, setCropType] = useState<"logo" | "cover">("logo");
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  // Form state — mirrors business model fields
+  const [form, setForm] = useState({
+    name: "",
+    tagline: "",
+    description: "",
+    phone: "",
+    whatsappNumber: "",
+    email: "",
+    websiteUrl: "",
+    logo: "",
+    coverPhoto: "",
+    address: "",
+    landmark: "",
+    city: "",
+    state: "",
+    country: "",
+    pincode: "",
+    amenities: [] as string[],
+    paymentModes: [] as string[],
+    seating: [] as string[],
+    timings: {} as TimingsData,
+    parking: { available: false, slots: 0, valet: false },
+    petPolicy: "",
+    socialLinks: { instagram: "", facebook: "", twitter: "" },
+  });
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Initialize state once business is loaded
   useEffect(() => {
     if (business) {
-      setName(business.name || "");
-      setDescription(business.description || "");
-      setPhone(business.phone || "");
-      setLogo(business.logo || "");
-      setCoverPhoto(business.coverPhoto || "");
-      setAddress(business.address || "");
-      setCity(business.city || "");
+      setForm({
+        name: business.name || "",
+        tagline: business.tagline || "",
+        description: business.description || "",
+        phone: business.phone || "",
+        whatsappNumber: business.whatsappNumber || "",
+        email: business.email || "",
+        websiteUrl: business.websiteUrl || "",
+        logo: business.logo || "",
+        coverPhoto: business.coverPhoto || "",
+        address: business.address || "",
+        landmark: business.landmark || "",
+        city: business.city || "",
+        state: business.state || "",
+        country: business.country || "",
+        pincode: business.pincode || "",
+        amenities: business.amenities || [],
+        paymentModes: business.paymentModes || [],
+        seating: business.seating || [],
+        timings: (business.timings as TimingsData) || {},
+        parking: business.parking || { available: false, slots: 0, valet: false },
+        petPolicy: business.petPolicy || "",
+        socialLinks: business.socialLinks || { instagram: "", facebook: "", twitter: "" },
+      });
       if (business.latitude && business.longitude) {
         setLocation({ lat: business.latitude, lng: business.longitude });
       }
     }
   }, [business]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "logo" | "cover") => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.addEventListener("load", () => {
-        setCropImage(reader.result as string);
-        setCropType(type);
-        setCropModalOpen(true);
-      });
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
-
-  const showCroppedImage = async () => {
-    try {
-      const croppedImage = await getCroppedImg(cropImage, croppedAreaPixels);
-      if (cropType === "logo") setLogo(croppedImage);
-      else setCoverPhoto(croppedImage);
-      setCropModalOpen(false);
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to crop image");
-    }
-  };
+  const set = (field: string, val: any) => setForm(prev => ({ ...prev, [field]: val }));
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("businessToken");
+      const payload = {
+        ...form,
+        latitude: location?.lat,
+        longitude: location?.lng,
+      };
       const res = await fetch(`http://localhost:5000/api/v1/businesses/me`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
-          name, 
-          description, 
-          phone, 
-          logo, 
-          coverPhoto,
-          address,
-          city,
-          latitude: location?.lat,
-          longitude: location?.lng
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Profile updated successfully!");
+        toast.success("Profile updated!");
         setBusiness(data.data || data);
         router.push("/business/dashboard");
       } else {
         toast.error(data.message || "Failed to update profile");
       }
-    } catch (err) {
+    } catch {
       toast.error("Network error");
     } finally {
       setLoading(false);
@@ -152,137 +172,248 @@ export default function EditProfilePage() {
 
   if (!business) return null;
 
+  const AMENITIES = ["WiFi", "Air Conditioning", "Lift/Elevator", "CCTV", "Power Backup", "Wheelchair Access", "Rest Rooms", "Lockers", "Drinking Water", "Outdoor Seating"];
+  const PAYMENT_MODES = ["Cash", "UPI", "Credit Card", "Debit Card", "Net Banking", "Wallets", "EMI", "Cheque"];
+  const SEATING_OPTIONS = ["Indoor", "Outdoor", "Rooftop", "Private Cabin", "Hall", "Counter"];
+  const PET_POLICIES = ["Pets Allowed", "No Pets", "Pets on Leash Only"];
+
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-      <div className="bg-white dark:bg-[#242424] rounded-[32px] overflow-hidden border border-gray-100 dark:border-gray-800 shadow-sm">
-        
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 bg-gray-100 dark:bg-[#1a1a1a] rounded-xl hover:bg-gray-200 dark:hover:bg-[#333] transition-colors">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+
+      {/* Sticky Top Bar */}
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-[#1a1a1a]/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between mb-6 rounded-b-2xl">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="p-2 bg-gray-100 dark:bg-[#2a2a2a] rounded-xl hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+          >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white">Edit Profile</h1>
-        </div>
-
-        <div className="p-6 space-y-8">
-          
-          {/* Banner Edit */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Cover Photo (Banner)</label>
-            <div className="relative h-64 w-full rounded-2xl bg-gray-100 dark:bg-[#1a1a1a] border-2 border-dashed border-gray-300 dark:border-gray-700 overflow-hidden group flex items-center justify-center">
-              {coverPhoto ? (
-                <img src={coverPhoto} alt="Cover" className="w-full h-full object-cover opacity-80 group-hover:opacity-50 transition-opacity" />
-              ) : (
-                <ImageIcon className="w-12 h-12 text-gray-400" />
-              )}
-              <label className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <Upload className="w-10 h-10 text-white drop-shadow-md mb-2" />
-                <span className="text-white font-bold drop-shadow-md text-lg">Change Cover Photo</span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, "cover")} />
-              </label>
+            <h1 className="text-xl font-black text-gray-900 dark:text-white">Edit Profile</h1>
+            <p className="text-xs text-gray-500">Changes are saved to your live profile</p>
+          </div>
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="flex items-center gap-2 px-6 py-2.5 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-60 text-black font-black rounded-xl text-sm transition-colors shadow-sm"
+        >
+          {loading ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Save size={16} />}
+          Save Changes
+        </button>
+      </div>
+
+      <div className="space-y-6">
+
+        {/* ── Media: Cover + Logo ─────────────────────────────────────────── */}
+        <SectionCard title="Media" icon={<Building2 size={16} />}>
+          <ImageUploadWithCrop
+            type="cover"
+            label="Cover Photo (Banner)"
+            value={form.coverPhoto}
+            onChange={(val) => set("coverPhoto", val)}
+          />
+          <ImageUploadWithCrop
+            type="logo"
+            label="Business Logo"
+            value={form.logo}
+            onChange={(val) => set("logo", val)}
+          />
+        </SectionCard>
+
+        {/* ── Identity ───────────────────────────────────────────────────── */}
+        <SectionCard title="Business Identity" icon={<Sparkles size={16} />}>
+          <div>
+            <FieldLabel>Business Name *</FieldLabel>
+            <input type="text" value={form.name} onChange={e => set("name", e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <FieldLabel>Tagline / Catchphrase</FieldLabel>
+            <input type="text" value={form.tagline} onChange={e => set("tagline", e.target.value)} placeholder="e.g. Best Coffee in Town" className={inputCls} />
+          </div>
+          <div>
+            <FieldLabel>About / Description</FieldLabel>
+            <textarea rows={5} value={form.description} onChange={e => set("description", e.target.value)} placeholder="Tell customers what makes you special..." className={inputCls + " resize-none"} />
+          </div>
+        </SectionCard>
+
+        {/* ── Contact Info ───────────────────────────────────────────────── */}
+        <SectionCard title="Contact Info" icon={<Phone size={16} />}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <FieldLabel>Primary Phone</FieldLabel>
+              <div className="relative">
+                <Phone size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="tel" value={form.phone} onChange={e => set("phone", e.target.value)} className={inputCls + " pl-10"} />
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2 font-bold">16:9 widescreen format works best.</p>
+            <div>
+              <FieldLabel>WhatsApp Number</FieldLabel>
+              <div className="relative">
+                <MessageCircle size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="tel" value={form.whatsappNumber} onChange={e => set("whatsappNumber", e.target.value)} className={inputCls + " pl-10"} />
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Email</FieldLabel>
+              <div className="relative">
+                <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="email" value={form.email} onChange={e => set("email", e.target.value)} className={inputCls + " pl-10"} />
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Website URL</FieldLabel>
+              <div className="relative">
+                <Globe size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="url" value={form.websiteUrl} onChange={e => set("websiteUrl", e.target.value)} placeholder="https://" className={inputCls + " pl-10"} />
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── Social Links ───────────────────────────────────────────────── */}
+        <SectionCard title="Social Media Links" icon={<Globe2 size={16} />}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div>
+              <FieldLabel>Instagram</FieldLabel>
+              <div className="relative">
+                <AtSign size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="url" value={form.socialLinks.instagram} onChange={e => set("socialLinks", { ...form.socialLinks, instagram: e.target.value })} placeholder="https://instagram.com/..." className={inputCls + " pl-10"} />
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Facebook</FieldLabel>
+              <div className="relative">
+                <Share2 size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="url" value={form.socialLinks.facebook} onChange={e => set("socialLinks", { ...form.socialLinks, facebook: e.target.value })} placeholder="https://facebook.com/..." className={inputCls + " pl-10"} />
+              </div>
+            </div>
+            <div>
+              <FieldLabel>Twitter / X</FieldLabel>
+              <div className="relative">
+                <Globe2 size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="url" value={form.socialLinks.twitter} onChange={e => set("socialLinks", { ...form.socialLinks, twitter: e.target.value })} placeholder="https://twitter.com/..." className={inputCls + " pl-10"} />
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── Location ───────────────────────────────────────────────────── */}
+        <SectionCard title="Location" icon={<MapPin size={16} />}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="sm:col-span-2">
+              <FieldLabel>Full Address</FieldLabel>
+              <input type="text" value={form.address} onChange={e => set("address", e.target.value)} placeholder="Door No, Building, Street" className={inputCls} />
+            </div>
+            <div>
+              <FieldLabel>Landmark</FieldLabel>
+              <input type="text" value={form.landmark} onChange={e => set("landmark", e.target.value)} placeholder="Near..." className={inputCls} />
+            </div>
+            <div>
+              <FieldLabel>Pincode</FieldLabel>
+              <input type="text" value={form.pincode} onChange={e => set("pincode", e.target.value)} className={inputCls} />
+            </div>
+            <div>
+              <FieldLabel>City</FieldLabel>
+              <input type="text" value={form.city} onChange={e => set("city", e.target.value)} className={inputCls} />
+            </div>
+            <div>
+              <FieldLabel>State</FieldLabel>
+              <input type="text" value={form.state} onChange={e => set("state", e.target.value)} className={inputCls} />
+            </div>
           </div>
 
-          {/* Logo Edit */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Business Logo</label>
-            <div className="flex items-center gap-6">
-              <div className="relative w-32 h-32 rounded-full bg-gray-100 dark:bg-[#1a1a1a] border-2 border-dashed border-gray-300 dark:border-gray-700 overflow-hidden group flex items-center justify-center shrink-0 shadow-sm">
-                {logo ? (
-                  <img src={logo} alt="Logo" className="w-full h-full object-cover opacity-80 group-hover:opacity-50 transition-opacity" />
-                ) : (
-                  <Camera className="w-10 h-10 text-gray-400" />
-                )}
-                <label className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <Upload className="w-8 h-8 text-white drop-shadow-md" />
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, "logo")} />
+            <FieldLabel>Pin Exact Location on Map</FieldLabel>
+            <div className="relative z-0 rounded-2xl overflow-hidden">
+              <MapPicker position={location} setPosition={setLocation} />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Search or click to drop your pin.</p>
+          </div>
+        </SectionCard>
+
+        {/* ── Operational Hours ─────────────────────────────────────────── */}
+        <SectionCard title="Operational Hours" icon={<Clock size={16} />}>
+          <TimingsPicker
+            value={form.timings}
+            onChange={(val) => set("timings", val)}
+          />
+        </SectionCard>
+
+        {/* ── Amenities ─────────────────────────────────────────────────── */}
+        <SectionCard title="Amenities & Features" icon={<Sparkles size={16} />}>
+          <ChipGroup options={AMENITIES} selected={form.amenities} onChange={val => set("amenities", val)} color="yellow" />
+        </SectionCard>
+
+        {/* ── Seating & Payment ─────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <SectionCard title="Seating Options" icon={<Users size={16} />}>
+            <ChipGroup options={SEATING_OPTIONS} selected={form.seating} onChange={val => set("seating", val)} color="blue" />
+          </SectionCard>
+          <SectionCard title="Payment Modes" icon={<CreditCard size={16} />}>
+            <ChipGroup options={PAYMENT_MODES} selected={form.paymentModes} onChange={val => set("paymentModes", val)} color="green" />
+          </SectionCard>
+        </div>
+
+        {/* ── Parking & Pet Policy ──────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <SectionCard title="Parking" icon={<Car size={16} />}>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div
+                onClick={() => set("parking", { ...form.parking, available: !form.parking.available })}
+                className={`w-12 h-6 rounded-full relative transition-colors ${form.parking.available ? "bg-yellow-400" : "bg-gray-200 dark:bg-gray-700"}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow ${form.parking.available ? "left-6" : "left-0.5"}`} />
+              </div>
+              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Parking Available</span>
+            </label>
+            {form.parking.available && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div>
+                  <FieldLabel>Number of Slots</FieldLabel>
+                  <input type="number" min="0" value={form.parking.slots} onChange={e => set("parking", { ...form.parking, slots: +e.target.value })} className={inputCls} />
+                </div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div
+                    onClick={() => set("parking", { ...form.parking, valet: !form.parking.valet })}
+                    className={`w-12 h-6 rounded-full relative transition-colors ${form.parking.valet ? "bg-yellow-400" : "bg-gray-200 dark:bg-gray-700"}`}
+                  >
+                    <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow ${form.parking.valet ? "left-6" : "left-0.5"}`} />
+                  </div>
+                  <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Valet Parking</span>
                 </label>
               </div>
-              <div className="text-sm text-gray-500 font-medium">
-                Upload a square image for best results. <br />
-                It will be cropped to a perfect circle for avatars and lists.
-              </div>
-            </div>
-          </div>
+            )}
+          </SectionCard>
 
-          {/* Basic Info */}
-          <div className="space-y-6 pt-4 border-t border-gray-100 dark:border-gray-800">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Business Name</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white" />
+          <SectionCard title="Pet Policy" icon={<PawPrint size={16} />}>
+            <div className="space-y-2">
+              {PET_POLICIES.map(p => (
+                <label key={p} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-[#1a1a1a] cursor-pointer transition-colors">
+                  <div
+                    onClick={() => set("petPolicy", p)}
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${form.petPolicy === p ? "bg-yellow-400 border-yellow-400" : "border-gray-300 dark:border-gray-600"}`}
+                  >
+                    {form.petPolicy === p && <Check size={11} className="text-black" strokeWidth={3} />}
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{p}</span>
+                </label>
+              ))}
             </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
-              <input type="text" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white" />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Description / Tagline</label>
-              <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white resize-none" />
-            </div>
-          </div>
-
-          {/* Location Info */}
-          <div className="space-y-6 pt-4 border-t border-gray-100 dark:border-gray-800">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-              <MapPin size={20} className="text-yellow-500" /> Location Details
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Full Address</label>
-                <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main St, Floor 2" className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white" />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">City</label>
-                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="e.g. New York" className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 transition-all text-gray-900 dark:text-white" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Pin on Map (Required for Discovery)</label>
-              <div className="relative z-0">
-                <MapPicker position={location} setPosition={setLocation} />
-              </div>
-              <p className="text-xs text-gray-500 mt-2 font-bold">Click on the map to set your exact business location.</p>
-            </div>
-          </div>
+          </SectionCard>
         </div>
 
-        <div className="bg-gray-50 dark:bg-[#1a1a1a] px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3">
-          <button onClick={() => router.back()} disabled={loading} className="px-6 py-3 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#242424] transition-colors">
+        {/* ── Save Footer ───────────────────────────────────────────────── */}
+        <div className="flex justify-end gap-3 pt-2">
+          <button onClick={() => router.back()} className="px-6 py-3 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors">
             Cancel
           </button>
-          <button onClick={handleSubmit} disabled={loading} className="px-8 py-3 rounded-xl font-bold bg-yellow-400 text-black hover:bg-yellow-500 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 min-w-[140px]">
-            {loading ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : "Save Changes"}
+          <button onClick={handleSubmit} disabled={loading} className="flex items-center gap-2 px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-xl transition-colors shadow-md disabled:opacity-60">
+            {loading ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <><Save size={16} /> Save Changes</>}
           </button>
         </div>
       </div>
-
-      {/* Cropper Modal */}
-      {cropModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4">
-          <div className="absolute top-6 right-6 z-[110] flex gap-3">
-            <button onClick={() => setCropModalOpen(false)} className="px-6 py-2.5 bg-gray-800 text-white rounded-xl font-bold hover:bg-gray-700 transition-colors">Cancel</button>
-            <button onClick={showCroppedImage} className="px-6 py-2.5 bg-yellow-400 text-black rounded-xl font-bold hover:bg-yellow-500 transition-colors">Crop & Save</button>
-          </div>
-          
-          <div className="relative w-full h-[70vh] md:w-3/4 max-w-4xl bg-gray-900 rounded-[32px] overflow-hidden mt-10 shadow-2xl">
-            <Cropper
-              image={cropImage}
-              crop={crop}
-              zoom={zoom}
-              aspect={cropType === "logo" ? 1 : 16 / 9}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

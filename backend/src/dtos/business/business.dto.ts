@@ -27,6 +27,7 @@ export interface BusinessDto {
   area?: string | null;
   city?: string | null;
   state?: string | null;
+  country?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   googleMapsUrl?: string | null;
@@ -35,10 +36,19 @@ export interface BusinessDto {
   subCategories: string[];
   amenities: string[];
   parking?: Record<string, unknown> | null;
+  petPolicy?: string | null;
+  seating: string[];
+  paymentModes: string[];
   logo?: string | null;
   coverPhoto?: string | null;
   images: string[];
+  videos: string[];
+  menus: string[];
+  services: Record<string, unknown>[];
+  products: Record<string, unknown>[];
   socialLinks?: Record<string, unknown> | null;
+  businessRegistrationProof?: string | null;
+  ownerIdProof?: string | null;
   isVerified: boolean;
   status: string;
   createdAt: Date;
