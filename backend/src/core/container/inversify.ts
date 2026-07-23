@@ -3,50 +3,50 @@ import { Container } from 'inversify';
 import { TYPES } from './types';
 
 // Repositories
-import { IUserRepository } from '../../modules/users/repositories/interfaces/user.repository.interface';
-import { MongooseUserRepository } from '../../modules/users/repositories/implementations/user.repository';
-import { IBusinessRepository } from '../../modules/businesses/repositories/interfaces/business.repository.interface';
-import { MongooseBusinessRepository } from '../../modules/businesses/repositories/implementations/business.repository';
-import { IPostRepository } from '../../modules/posts/repositories/interfaces/post.repository.interface';
-import { MongoosePostRepository } from '../../modules/posts/repositories/implementations/post.repository';
-import { IOtpRepository } from '../../modules/auth/repositories/interfaces/otp.repository.interface';
-import { MongooseOtpRepository } from '../../modules/auth/repositories/implementations/otp.repository';
+import { IUserRepository } from '../interfaces/repositories/user/user.repository.interface';
+import { MongooseUserRepository } from '../../repositories/user/user.repository';
+import { IBusinessRepository } from '../interfaces/repositories/business/business.repository.interface';
+import { MongooseBusinessRepository } from '../../repositories/business/business.repository';
+import { IPostRepository } from '../interfaces/repositories/business/post.repository.interface';
+import { MongoosePostRepository } from '../../repositories/business/post.repository';
+import { IOtpRepository } from '../interfaces/repositories/user/otp.repository.interface';
+import { MongooseOtpRepository } from '../../repositories/user/otp.repository';
 
 // Services
-import { IAuthService } from '../../modules/auth/services/interfaces/auth.service.interface';
-import { AuthService } from '../../modules/auth/services/implementations/auth.service';
-import { IBusinessesService } from '../../modules/businesses/services/interfaces/businesses.service.interface';
-import { BusinessesService } from '../../modules/businesses/services/implementations/businesses.service';
-import { IAdminService } from '../../modules/admin/services/interfaces/admin.service.interface';
-import { AdminService } from '../../modules/admin/services/implementations/admin.service';
-import { IPostsService } from '../../modules/posts/services/interfaces/posts.service.interface';
-import { PostsService } from '../../modules/posts/services/implementations/posts.service';
+import { IAuthService } from '../interfaces/services/user/auth.service.interface';
+import { AuthService } from '../../services/user/auth.service';
+import { IBusinessesService } from '../interfaces/services/business/businesses.service.interface';
+import { BusinessesService } from '../../services/business/businesses.service';
+import { IAdminService } from '../interfaces/services/admin/admin.service.interface';
+import { AdminService } from '../../services/admin/admin.service';
+import { IPostsService } from '../interfaces/services/business/posts.service.interface';
+import { PostsService } from '../../services/business/posts.service';
 import { IOtpService } from '../../shared/services/interfaces/otp.service.interface';
 import { OtpService } from '../../shared/services/implementations/otp.service';
-import { ILocationService } from '../../modules/location/services/interfaces/location.service.interface';
-import { LocationService } from '../../modules/location/services/implementations/location.service';
+import { ILocationService } from '../interfaces/services/user/location.service.interface';
+import { LocationService } from '../../services/user/location.service';
 
 // Controllers
-import { IAuthController } from '../../modules/auth/controllers/interfaces/auth.controller.interface';
-import { AuthController } from '../../modules/auth/controllers/implementations/auth.controller';
-import { IBusinessesController } from '../../modules/businesses/controllers/interfaces/businesses.controller.interface';
-import { BusinessesController } from '../../modules/businesses/controllers/implementations/businesses.controller';
-import { IAdminController } from '../../modules/admin/controllers/interfaces/admin.controller.interface';
-import { AdminController } from '../../modules/admin/controllers/implementations/admin.controller';
-import { IPostsController } from '../../modules/posts/controllers/interfaces/posts.controller.interface';
-import { PostsController } from '../../modules/posts/controllers/implementations/posts.controller';
-import { IFlashDealsController } from '../../modules/posts/controllers/interfaces/flash-deals.controller.interface';
-import { FlashDealsController } from '../../modules/posts/controllers/implementations/flash-deals.controller';
-import { ILocationController } from '../../modules/location/controllers/interfaces/location.controller.interface';
-import { LocationController } from '../../modules/location/controllers/implementations/location.controller';
+import { IAuthController } from '../interfaces/controllers/user/auth.controller.interface';
+import { AuthController } from '../../controllers/user/auth.controller';
+import { IBusinessesController } from '../interfaces/controllers/business/businesses.controller.interface';
+import { BusinessesController } from '../../controllers/business/businesses.controller';
+import { IAdminController } from '../interfaces/controllers/admin/admin.controller.interface';
+import { AdminController } from '../../controllers/admin/admin.controller';
+import { IPostsController } from '../interfaces/controllers/business/posts.controller.interface';
+import { PostsController } from '../../controllers/business/posts.controller';
+import { IFlashDealsController } from '../interfaces/controllers/business/flash-deals.controller.interface';
+import { FlashDealsController } from '../../controllers/business/flash-deals.controller';
+import { ILocationController } from '../interfaces/controllers/user/location.controller.interface';
+import { LocationController } from '../../controllers/user/location.controller';
 
 // Parking Imports
-import { IParkingRepository } from '../../modules/parking/repositories/interfaces/parking.repository.interface';
-import { ParkingRepository } from '../../modules/parking/repositories/implementations/parking.repository';
-import { IParkingService } from '../../modules/parking/services/interfaces/parking.service.interface';
-import { ParkingService } from '../../modules/parking/services/implementations/parking.service';
-import { IParkingController } from '../../modules/parking/controllers/interfaces/parking.controller.interface';
-import { ParkingController } from '../../modules/parking/controllers/implementations/parking.controller';
+import { IParkingRepository } from '../interfaces/repositories/business/parking.repository.interface';
+import { ParkingRepository } from '../../repositories/business/parking.repository';
+import { IParkingService } from '../interfaces/services/business/parking.service.interface';
+import { ParkingService } from '../../services/business/parking.service';
+import { IParkingController } from '../interfaces/controllers/business/parking.controller.interface';
+import { ParkingController } from '../../controllers/business/parking.controller';
 
 const container = new Container();
 

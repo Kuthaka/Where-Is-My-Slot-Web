@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { IPostsController } from '../modules/posts/controllers/interfaces/posts.controller.interface';
+import { IPostsController } from '../core/interfaces/controllers/business/posts.controller.interface';
 import { authenticate } from '../shared/middleware/auth.middleware';
 
 export function createPostsRouter(postsController: IPostsController): Router {

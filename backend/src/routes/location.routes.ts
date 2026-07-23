@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { ILocationController } from '../modules/location/controllers/interfaces/location.controller.interface';
+import { ILocationController } from '../core/interfaces/controllers/user/location.controller.interface';
 import { authenticate } from '../shared/middleware/auth.middleware';
 import { validateRequest } from '../shared/middleware/validate.middleware';
-import { SetLocationDtoSchema } from '../modules/location/dtos/location.dto';
+import { SetLocationDtoSchema } from '../dtos/user/location.dto';
 
 export function createLocationRouter(locationController: ILocationController): Router {
   const router = Router();

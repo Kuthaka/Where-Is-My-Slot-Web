@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../shared/middleware/auth.middleware';
-import { IBusinessesController } from '../modules/businesses/controllers/interfaces/businesses.controller.interface';
+import { IBusinessesController } from '../core/interfaces/controllers/business/businesses.controller.interface';
 
 export function createBusinessAuthRouter(businessesController: IBusinessesController): Router {
   const router = Router();

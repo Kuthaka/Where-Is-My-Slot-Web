@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { IAdminController } from '../modules/admin/controllers/interfaces/admin.controller.interface';
+import { IAdminController } from '../core/interfaces/controllers/admin/admin.controller.interface';
 import { authenticate, requireRoles } from '../shared/middleware/auth.middleware';
 import { UserRole } from '../shared/enums/user-role.enum';
 

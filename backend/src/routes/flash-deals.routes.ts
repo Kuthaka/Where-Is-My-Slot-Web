@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { IFlashDealsController } from '../modules/posts/controllers/interfaces/flash-deals.controller.interface';
+import { IFlashDealsController } from '../core/interfaces/controllers/business/flash-deals.controller.interface';
 import { authenticate } from '../shared/middleware/auth.middleware';
 
 export function createFlashDealsRouter(flashDealsController: IFlashDealsController): Router {

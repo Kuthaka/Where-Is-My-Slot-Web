@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { IAuthController } from '../modules/auth/controllers/interfaces/auth.controller.interface';
+import { IAuthController } from '../core/interfaces/controllers/user/auth.controller.interface';
 import { authenticate } from '../shared/middleware/auth.middleware';
 import { validateRequest } from '../shared/middleware/validate.middleware';
 import {
@@ -8,7 +8,7 @@ import {
   LoginDtoSchema,
   RegisterDtoSchema,
   SetPasswordDtoSchema
-} from '../modules/auth/dtos/auth.dto';
+} from '../dtos/user/auth.dto';
 
 export function createAuthRouter(authController: IAuthController): Router {
   const router = Router();

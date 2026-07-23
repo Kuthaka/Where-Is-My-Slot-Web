@@ -1,9 +1,9 @@
 import { injectable, inject } from 'inversify';
 import { v4 as uuidv4 } from 'uuid';
 import { IOtpService } from '../interfaces/otp.service.interface';
-import { IOtpRepository } from '../../../modules/auth/repositories/interfaces/otp.repository.interface';
+import { IOtpRepository } from '../../../core/interfaces/repositories/user/otp.repository.interface';
 import { TYPES } from '../../../core/container/types';
-import { Otp } from '../../../modules/auth/entities/otp.entity';
+import { Otp } from '../../../models/otp.entity';
 import { sendOtpEmail } from '../email.service';
 import { BadRequestError } from '../../errors/app-error';
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { IParkingController } from '../modules/parking/controllers/interfaces/parking.controller.interface';
+import { IParkingController } from '../core/interfaces/controllers/business/parking.controller.interface';
 import { authenticate, requireRoles } from '../shared/middleware/auth.middleware';
 import { UserRole } from '../shared/enums/user-role.enum';
 

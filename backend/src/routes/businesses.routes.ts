@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { IBusinessesController } from '../modules/businesses/controllers/interfaces/businesses.controller.interface';
+import { IBusinessesController } from '../core/interfaces/controllers/business/businesses.controller.interface';
 import { authenticate, requireRoles } from '../shared/middleware/auth.middleware';
 import { UserRole } from '../shared/enums/user-role.enum';
 

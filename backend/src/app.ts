@@ -5,13 +5,13 @@ import cors from 'cors';
 import { requestLogger } from './shared/middleware/response.middleware';
 import { globalErrorHandler } from './shared/middleware/error-handler.middleware';
 
-import { IAuthController } from './modules/auth/controllers/interfaces/auth.controller.interface';
-import { IBusinessesController } from './modules/businesses/controllers/interfaces/businesses.controller.interface';
-import { IAdminController } from './modules/admin/controllers/interfaces/admin.controller.interface';
-import { IPostsController } from './modules/posts/controllers/interfaces/posts.controller.interface';
-import { IFlashDealsController } from './modules/posts/controllers/interfaces/flash-deals.controller.interface';
-import { ILocationController } from './modules/location/controllers/interfaces/location.controller.interface';
-import { IParkingController } from './modules/parking/controllers/interfaces/parking.controller.interface';
+import { IAuthController } from './core/interfaces/controllers/user/auth.controller.interface';
+import { IBusinessesController } from './core/interfaces/controllers/business/businesses.controller.interface';
+import { IAdminController } from './core/interfaces/controllers/admin/admin.controller.interface';
+import { IPostsController } from './core/interfaces/controllers/business/posts.controller.interface';
+import { IFlashDealsController } from './core/interfaces/controllers/business/flash-deals.controller.interface';
+import { ILocationController } from './core/interfaces/controllers/user/location.controller.interface';
+import { IParkingController } from './core/interfaces/controllers/business/parking.controller.interface';
 
 // ─── Container ─────────────────────────────────────────────────────────────────
 import { container } from './core/container/inversify';
