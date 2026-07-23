@@ -15,6 +15,10 @@ import { MongooseOtpRepository } from '../../repositories/user/otp.repository';
 // Services
 import { IAuthService } from '../interfaces/services/user/auth.service.interface';
 import { AuthService } from '../../services/user/auth.service';
+import { IBusinessAuthService } from '../interfaces/services/business/auth.service.interface';
+import { BusinessAuthService } from '../../services/business/auth.service';
+import { IAdminAuthService } from '../interfaces/services/admin/auth.service.interface';
+import { AdminAuthService } from '../../services/admin/auth.service';
 import { IBusinessesService } from '../interfaces/services/business/businesses.service.interface';
 import { BusinessesService } from '../../services/business/businesses.service';
 import { IAdminService } from '../interfaces/services/admin/admin.service.interface';
@@ -29,6 +33,10 @@ import { LocationService } from '../../services/user/location.service';
 // Controllers
 import { IAuthController } from '../interfaces/controllers/user/auth.controller.interface';
 import { AuthController } from '../../controllers/user/auth.controller';
+import { IBusinessAuthController } from '../interfaces/controllers/business/auth.controller.interface';
+import { BusinessAuthController } from '../../controllers/business/auth.controller';
+import { IAdminAuthController } from '../interfaces/controllers/admin/auth.controller.interface';
+import { AdminAuthController } from '../../controllers/admin/auth.controller';
 import { IBusinessesController } from '../interfaces/controllers/business/businesses.controller.interface';
 import { BusinessesController } from '../../controllers/business/businesses.controller';
 import { IAdminController } from '../interfaces/controllers/admin/admin.controller.interface';
@@ -59,6 +67,8 @@ container.bind<IParkingRepository>(TYPES.ParkingRepository).to(ParkingRepository
 
 // Services
 container.bind<IAuthService>(TYPES.AuthService).to(AuthService);
+container.bind<IBusinessAuthService>(TYPES.BusinessAuthService).to(BusinessAuthService);
+container.bind<IAdminAuthService>(TYPES.AdminAuthService).to(AdminAuthService);
 container.bind<IBusinessesService>(TYPES.BusinessesService).to(BusinessesService);
 container.bind<IAdminService>(TYPES.AdminService).to(AdminService);
 container.bind<IPostsService>(TYPES.PostsService).to(PostsService);
@@ -68,6 +78,8 @@ container.bind<IParkingService>(TYPES.ParkingService).to(ParkingService);
 
 // Controllers
 container.bind<IAuthController>(TYPES.AuthController).to(AuthController);
+container.bind<IBusinessAuthController>(TYPES.BusinessAuthController).to(BusinessAuthController);
+container.bind<IAdminAuthController>(TYPES.AdminAuthController).to(AdminAuthController);
 container.bind<IBusinessesController>(TYPES.BusinessesController).to(BusinessesController);
 container.bind<IAdminController>(TYPES.AdminController).to(AdminController);
 container.bind<IPostsController>(TYPES.PostsController).to(PostsController);

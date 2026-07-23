@@ -31,23 +31,14 @@ export class BusinessesService implements IBusinessesService {
   }
 
   async getMyBusiness(userId: string, isBusinessUser: boolean): Promise<BusinessDto | null> {
-    if (isBusinessUser) {
-      return this.businessRepository.findById(userId);
-    } else {
-      const businesses = await this.businessRepository.findByOwnerId(userId);
-      return businesses.length > 0 ? businesses[0] : null;
-    }
+    const businesses = await this.businessRepository.findByOwnerId(userId);
+    return businesses.length > 0 ? businesses[0] : null;
   }
 
   async updateMyBusiness(userId: string, isBusinessUser: boolean, data: Record<string, any>): Promise<BusinessDto> {
-    let businessId: string;
-    if (isBusinessUser) {
-      businessId = userId;
-    } else {
-      const businesses = await this.businessRepository.findByOwnerId(userId);
-      if (businesses.length === 0) throw new NotFoundError('BusinessDto not found for the current user');
-      businessId = businesses[0].id;
-    }
+    const businesses = await this.businessRepository.findByOwnerId(userId);
+    if (businesses.length === 0) throw new NotFoundError('Business not found');
+    const businessId = businesses[0].id!;
 
     let { logo, coverPhoto, ...otherProps } = data;
 
@@ -174,82 +165,7 @@ export class BusinessesService implements IBusinessesService {
 
     return { business: createdBusiness, accessToken };
   }
-
-  async businessLogin(data: Record<string, unknown>): Promise<{ business: BusinessDto; accessToken: string }> {
-    const email = data.email as string;
-    const password = data.password as string;
-
-    if (!email || !password) throw new BadRequestError('Email and password are required');
-
-    const user = await this.userRepository.findByEmail(email);
-    if (!user) throw new UnauthorizedError('No account found with this email');
-    
-    if (user.role !== UserRole.BUSINESS && user.role !== UserRole.SUPER_ADMIN) {
-      throw new UnauthorizedError('This account is not a business account.');
-    }
-
-    const isValid = await bcrypt.compare(password, user.passwordHash || "");
-    if (!isValid) throw new UnauthorizedError('Invalid credentials');
-
-    const businesses = await this.businessRepository.findByOwnerId(user.id);
-    if (businesses.length === 0) {
-      throw new NotFoundError('No business profile is associated with this account.');
-    }
-    const business = businesses[0];
-
-    const secret = process.env.JWT_ACCESS_SECRET as string;
-    const accessToken = jwt.sign(
-      { sub: user.id, email: user.email, role: user.role },
-      secret,
-      { expiresIn: '7d' }
-    );
-
-    return { business, accessToken };
-  }
-
-  async businessSetPassword(userId: string, data: Record<string, unknown>): Promise<void> {
-    const newPassword = data.newPassword as string;
-    const oldPassword = data.oldPassword as string;
-
-    if (!newPassword) throw new BadRequestError('New password is required');
-
-    const user = await this.userRepository.findById(userId);
-    if (!user) throw new NotFoundError('UserDto not found');
-
-    if (user.isPasswordSet) {
-      if (!oldPassword) throw new BadRequestError('Old password is required');
-      const isValid = await bcrypt.compare(oldPassword, user.passwordHash || "");
-      if (!isValid) throw new BadRequestError('Old password is incorrect');
-    }
-
-    const passwordHash = await bcrypt.hash(newPassword, 10);
-    await this.userRepository.update(user.id, {
-      passwordHash,
-      isPasswordSet: true,
-    });
-  }
-
   async uploadImage(fileBuffer: Buffer): Promise<string> {
     return uploadBuffer(fileBuffer);
-  }
-
-  async businessSendOtp(email: string): Promise<void> {
-    if (!email) throw new BadRequestError('Email is required');
-    await this.otpService.sendOtp(email);
-  }
-
-  async businessVerifyOtp(email: string, otp: string): Promise<{ verified: boolean; verifiedToken: string }> {
-    if (!email || !otp) throw new BadRequestError('Email and OTP are required');
-
-    await this.otpService.verifyOtp(email, otp);
-
-    const secret = process.env.JWT_ACCESS_SECRET as string;
-    const verifiedToken = jwt.sign(
-      { email, type: 'business-otp-verified' },
-      secret,
-      { expiresIn: '2h' }
-    );
-
-    return { verified: true, verifiedToken };
   }
 }

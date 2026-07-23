@@ -8,6 +8,8 @@ import { globalErrorHandler } from './shared/middleware/error-handler.middleware
 import { IAuthController } from './core/interfaces/controllers/user/auth.controller.interface';
 import { IBusinessesController } from './core/interfaces/controllers/business/businesses.controller.interface';
 import { IAdminController } from './core/interfaces/controllers/admin/admin.controller.interface';
+import { IBusinessAuthController } from './core/interfaces/controllers/business/auth.controller.interface';
+import { IAdminAuthController } from './core/interfaces/controllers/admin/auth.controller.interface';
 import { IPostsController } from './core/interfaces/controllers/business/posts.controller.interface';
 import { IFlashDealsController } from './core/interfaces/controllers/business/flash-deals.controller.interface';
 import { ILocationController } from './core/interfaces/controllers/user/location.controller.interface';
@@ -22,6 +24,7 @@ import {
   createAuthRouter,
   createBusinessesRouter,
   createBusinessAuthRouter,
+  createAdminAuthRouter,
   createAdminRouter,
   createPostsRouter,
   createFlashDealsRouter,
@@ -43,6 +46,8 @@ export function createApp(): Application {
 
   // ── Retrieve Controllers from Container ──────────────────────────────────────
   const authController = container.get<IAuthController>(TYPES.AuthController);
+  const businessAuthController = container.get<IBusinessAuthController>(TYPES.BusinessAuthController);
+  const adminAuthController = container.get<IAdminAuthController>(TYPES.AdminAuthController);
   const businessesController = container.get<IBusinessesController>(TYPES.BusinessesController);
   const adminController = container.get<IAdminController>(TYPES.AdminController);
   const postsController = container.get<IPostsController>(TYPES.PostsController);
@@ -103,7 +108,8 @@ export function createApp(): Application {
 
   // ── Module Routes ─────────────────────────────────────────────────────────────
   app.use('/api/v1/auth', createAuthRouter(authController));
-  app.use('/api/v1/business-auth', createBusinessAuthRouter(businessesController));
+  app.use('/api/v1/business-auth', createBusinessAuthRouter(businessAuthController));
+  app.use('/api/v1/admin-auth', createAdminAuthRouter(adminAuthController));
   app.use('/api/v1/businesses', createBusinessesRouter(businessesController));
   app.use('/api/v1/admin', createAdminRouter(adminController));
   app.use('/api/v1/posts', createPostsRouter(postsController));

@@ -8,8 +8,4 @@ export interface IBusinessesController {
   updateMyBusiness(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> | void;
   onboardBusiness(req: Request, res: Response, next: NextFunction): Promise<void> | void;
   uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> | void;
-  businessLogin(req: Request, res: Response, next: NextFunction): Promise<void> | void;
-  businessSetPassword(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> | void;
-  businessSendOtp(req: Request, res: Response, next: NextFunction): Promise<void> | void;
-  businessVerifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> | void;
 }

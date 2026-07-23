@@ -123,8 +123,8 @@ export class MongoosePostRepository implements IPostRepository {
 
   async getFlashDeals(businessId?: string): Promise<unknown[]> {
     const { Types } = require('mongoose');
-    const { FlashDealModel } = require('../../../../models/misc.model');
-    const { BusinessModel } = require('../../../../models/business.model');
+    const { FlashDealModel } = require('../../models/misc.model');
+    const { BusinessModel } = require('../../models/business.model');
 
     const where: Record<string, unknown> = { activeUntil: { $gt: new Date() } };
     if (businessId) where.businessId = new Types.ObjectId(businessId);
@@ -151,7 +151,7 @@ export class MongoosePostRepository implements IPostRepository {
   }
 
   async createFlashDeal(businessId: string, offer: string, image: string, type: string, navigateLink?: string): Promise<unknown> {
-    const { FlashDealModel } = require('../../../../models/misc.model');
+    const { FlashDealModel } = require('../../models/misc.model');
     return FlashDealModel.create({
       businessId,
       offer,

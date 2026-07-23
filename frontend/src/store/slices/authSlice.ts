@@ -58,7 +58,11 @@ const authSlice = createSlice({
       state.loading = false;
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
+        localStorage.removeItem('businessToken');
+        localStorage.removeItem('adminToken');
         document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "businessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       }
     },
     stopLoading: (state) => {

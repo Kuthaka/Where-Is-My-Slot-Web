@@ -73,38 +73,10 @@ export class BusinessesController implements IBusinessesController {
     const { passwordHash: _, ...safeProps } = business;
     sendCreated(res, { business: safeProps, accessToken });
   });
-
-  // ─── Public: Business Login ───────────────────────────────────────────────────
-  businessLogin = catchAsync(async (req: Request, res: Response): Promise<void> => {
-    const { business, accessToken } = await this.businessesService.businessLogin(req.body);
-    const { passwordHash, ...safeProps } = business;
-    sendSuccess(res, { business: safeProps, accessToken });
-  });
-
-  // ─── Authenticated Business: Set/Change Password ─────────────────────────────
-  businessSetPassword = catchAsync(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    await this.businessesService.businessSetPassword(req.user!.id, req.body);
-    sendSuccess(res, { message: 'Password updated successfully' });
-  });
-
   // ─── Public: Upload Image ─────────────────────────────────────────────────────
   uploadImage = catchAsync(async (req: Request, res: Response): Promise<void> => {
     if (!req.file) throw new BadRequestError('No image file provided');
     const url = await this.businessesService.uploadImage(req.file.buffer);
     sendSuccess(res, { url });
-  });
-
-  // ─── Public: Send OTP (Business Registration) ────────────────────────────────
-  businessSendOtp = catchAsync(async (req: Request, res: Response): Promise<void> => {
-    const { email } = req.body;
-    await this.businessesService.businessSendOtp(email);
-    sendSuccess(res, { message: `OTP sent to ${email}` });
-  });
-
-  // ─── Public: Verify OTP (Business Registration) ──────────────────────────────
-  businessVerifyOtp = catchAsync(async (req: Request, res: Response): Promise<void> => {
-    const { email, otp } = req.body;
-    const result = await this.businessesService.businessVerifyOtp(email, otp);
-    sendSuccess(res, result);
   });
 }

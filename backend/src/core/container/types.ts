@@ -8,6 +8,8 @@ export const TYPES = {
 
     // Services
     AuthService: Symbol.for("AuthService"),
+    BusinessAuthService: Symbol.for("BusinessAuthService"),
+    AdminAuthService: Symbol.for("AdminAuthService"),
     BusinessesService: Symbol.for("BusinessesService"),
     AdminService: Symbol.for("AdminService"),
     PostsService: Symbol.for("PostsService"),
@@ -17,6 +19,8 @@ export const TYPES = {
 
     // Controllers
     AuthController: Symbol.for("AuthController"),
+    BusinessAuthController: Symbol.for("BusinessAuthController"),
+    AdminAuthController: Symbol.for("AdminAuthController"),
     BusinessesController: Symbol.for("BusinessesController"),
     AdminController: Symbol.for("AdminController"),
     PostsController: Symbol.for("PostsController"),
