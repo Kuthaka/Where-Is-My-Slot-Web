@@ -2,6 +2,9 @@
 
 import { CheckCircle2, MapPin, Phone, Mail, Globe, Clock, Info, Check } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
 export default function ProfileTab({ business }: { business: any }) {
   if (!business) return null;
@@ -124,6 +127,14 @@ export default function ProfileTab({ business }: { business: any }) {
                   </p>
                 </div>
               </div>
+
+              {/* Map View */}
+              {business.latitude && business.longitude && (
+                <div className="pt-2">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Location on Map</p>
+                  <MapPicker position={{ lat: business.latitude, lng: business.longitude }} readonly={true} />
+                </div>
+              )}
             </div>
           </div>
 

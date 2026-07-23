@@ -15,13 +15,16 @@ L.Icon.Default.mergeOptions({
 
 interface MapPickerProps {
   position: { lat: number; lng: number } | null;
-  setPosition: (pos: { lat: number; lng: number }) => void;
+  setPosition?: (pos: { lat: number; lng: number }) => void;
+  readonly?: boolean;
 }
 
-function LocationMarker({ position, setPosition }: MapPickerProps) {
+function LocationMarker({ position, setPosition, readonly }: MapPickerProps) {
   useMapEvents({
     click(e) {
-      setPosition({ lat: e.latlng.lat, lng: e.latlng.lng });
+      if (!readonly && setPosition) {
+        setPosition({ lat: e.latlng.lat, lng: e.latlng.lng });
+      }
     },
   });
 
@@ -30,7 +33,7 @@ function LocationMarker({ position, setPosition }: MapPickerProps) {
   );
 }
 
-export default function MapPicker({ position, setPosition }: MapPickerProps) {
+export default function MapPicker({ position, setPosition, readonly = false }: MapPickerProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -52,7 +55,7 @@ export default function MapPicker({ position, setPosition }: MapPickerProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <LocationMarker position={position} setPosition={setPosition} />
+        <LocationMarker position={position} setPosition={setPosition} readonly={readonly} />
       </MapContainer>
     </div>
   );

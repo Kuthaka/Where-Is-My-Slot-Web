@@ -6,10 +6,13 @@ import {
   Mail, ArrowRight, Building2, MapPin, Car, UploadCloud,
   ChevronRight, ChevronLeft, Check, Clock, KeyRound, Eye, EyeOff,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import Header from "@/components/Header";
 import { useModal } from "@/components/ModalProvider";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
 const TOTAL_STEPS = 5; // 0=email, 1=basics, 2=location, 3=details, 4=media
 
@@ -37,6 +40,8 @@ export default function BusinessRegisterPage() {
     state: "",
     pincode: "",
     password: "",
+    latitude: 20.5937,
+    longitude: 78.9629,
     parking: { available: false, slots: 0, valet: false },
     images: [] as string[],
     amenities: [] as string[],
@@ -443,6 +448,14 @@ export default function BusinessRegisterPage() {
                     <div>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Pincode</label>
                       <input name="pincode" value={formData.pincode} onChange={handleChange} className="w-full bg-gray-50 dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all text-gray-900 dark:text-white" placeholder="400001" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2"><MapPin size={16} /> Pin on Map</label>
+                      <MapPicker 
+                        position={{ lat: formData.latitude, lng: formData.longitude }} 
+                        setPosition={(pos) => setFormData(prev => ({ ...prev, latitude: pos.lat, longitude: pos.lng }))} 
+                      />
+                      <p className="text-xs text-gray-500 mt-2">Click on the map to set your business location</p>
                     </div>
                   </div>
                 </div>
