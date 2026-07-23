@@ -1,6 +1,6 @@
 "use client";
 
-import { Store, LayoutDashboard, FileText, Gift, Car, Building2, LogOut, Shield } from "lucide-react";
+import { Store, LayoutDashboard, FileText, UtensilsCrossed, Car, Building2, LogOut, Shield } from "lucide-react";
 import Link from "next/link";
 
 interface SidebarProps {
@@ -12,10 +12,10 @@ interface SidebarProps {
 export default function BusinessSidebar({ activeTab, setActiveTab, handleLogout }: SidebarProps) {
   const navItems = [
     { id: "overview", label: "Dashboard", icon: LayoutDashboard, href: "/business/dashboard" },
-    { id: "posts", label: "Posts", icon: FileText, href: "/business/dashboard/posts" },
-    { id: "offers", label: "Offers", icon: Gift, href: "/business/dashboard/offers" },
-    { id: "parking", label: "Parking", icon: Car, href: "/business/dashboard/parking" },
     { id: "profile", label: "Profile", icon: Building2, href: "/business/dashboard/profile" },
+    { id: "posts", label: "Posts", icon: FileText, href: "/business/dashboard/posts" },
+    { id: "menu", label: "Menu", icon: UtensilsCrossed, href: "/business/dashboard/menu" },
+    { id: "parking", label: "Parking", icon: Car, href: "/business/dashboard/parking" },
     { id: "security", label: "Security", icon: Shield, href: "/business/dashboard/security" },
   ];
 

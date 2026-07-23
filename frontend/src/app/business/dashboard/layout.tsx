@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (pathname === "/business/dashboard") return "overview";
     if (pathname.includes("/profile")) return "profile";
     if (pathname.includes("/posts")) return "posts";
-    if (pathname.includes("/offers")) return "offers";
+    if (pathname.includes("/menu")) return "menu";
     if (pathname.includes("/parking")) return "parking";
     if (pathname.includes("/security")) return "security";
     return "overview";
