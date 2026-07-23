@@ -1,17 +1,29 @@
 import { injectable, inject } from 'inversify';
 import { IParkingService } from '../interfaces/parking.service.interface';
 import { IParkingRepository } from '../../repositories/interfaces/parking.repository.interface';
-import { IParkingDocument } from '../../../../models/parking.model';
+import { IBusinessRepository } from '../../../businesses/repositories/interfaces/business.repository.interface';
+import { ParkingDto } from '../../dtos/parking.dto';
 import { NotFoundError, UnauthorizedError, BadRequestError } from '../../../../shared/errors/app-error';
 import { TYPES } from '../../../../core/container/types';
 
 @injectable()
 export class ParkingService implements IParkingService {
   constructor(
-    @inject(TYPES.ParkingRepository) private parkingRepository: IParkingRepository
+    @inject(TYPES.ParkingRepository) private parkingRepository: IParkingRepository,
+    @inject(TYPES.BusinessRepository) private businessRepository: IBusinessRepository
   ) {}
 
-  async createBusinessParking(businessId: string, data: Partial<IParkingDocument>): Promise<IParkingDocument> {
+  private async getBusinessIdForUser(userId: string, isBusinessUser: boolean): Promise<string> {
+    if (isBusinessUser) {
+      return userId;
+    }
+    const businesses = await this.businessRepository.findByOwnerId(userId);
+    if (!businesses.length) throw new BadRequestError('User does not own a business');
+    return businesses[0].id;
+  }
+
+  async createBusinessParking(userId: string, isBusinessUser: boolean, data: Partial<ParkingDto>): Promise<ParkingDto> {
+    const businessId = await this.getBusinessIdForUser(userId, isBusinessUser);
     const payload = {
       ...data,
       source: 'BUSINESS' as const,
@@ -21,7 +33,7 @@ export class ParkingService implements IParkingService {
     return this.parkingRepository.create(payload);
   }
 
-  async createCommunityParking(userId: string, data: Partial<IParkingDocument>): Promise<IParkingDocument> {
+  async createCommunityParking(userId: string, data: Partial<ParkingDto>): Promise<ParkingDto> {
     const payload = {
       ...data,
       source: 'COMMUNITY' as const,
@@ -31,21 +43,22 @@ export class ParkingService implements IParkingService {
     return this.parkingRepository.create(payload);
   }
 
-  async getParkingById(id: string): Promise<IParkingDocument> {
+  async getParkingById(id: string): Promise<ParkingDto> {
     const parking = await this.parkingRepository.findById(id);
     if (!parking) throw new NotFoundError('Parking not found');
     return parking;
   }
 
-  async getBusinessParking(businessId: string): Promise<IParkingDocument[]> {
+  async getBusinessParking(userId: string, isBusinessUser: boolean): Promise<ParkingDto[]> {
+    const businessId = await this.getBusinessIdForUser(userId, isBusinessUser);
     return this.parkingRepository.findByBusinessId(businessId);
   }
 
-  async updateParking(id: string, businessId: string, data: Partial<IParkingDocument>): Promise<IParkingDocument> {
+  async updateParking(id: string, userId: string, isBusinessUser: boolean, data: Partial<ParkingDto>): Promise<ParkingDto> {
+    const businessId = await this.getBusinessIdForUser(userId, isBusinessUser);
     const parking = await this.parkingRepository.findById(id);
     if (!parking) throw new NotFoundError('Parking not found');
     
-    // Ensure the business owns the parking
     if (parking.businessId?.toString() !== businessId) {
       throw new UnauthorizedError('Not authorized to update this parking space');
     }
@@ -55,7 +68,8 @@ export class ParkingService implements IParkingService {
     return updated;
   }
 
-  async updateAvailability(id: string, businessId: string, slots: any): Promise<IParkingDocument> {
+  async updateAvailability(id: string, userId: string, isBusinessUser: boolean, slots: any): Promise<ParkingDto> {
+    const businessId = await this.getBusinessIdForUser(userId, isBusinessUser);
     const parking = await this.parkingRepository.findById(id);
     if (!parking) throw new NotFoundError('Parking not found');
     
@@ -63,7 +77,6 @@ export class ParkingService implements IParkingService {
       throw new UnauthorizedError('Not authorized to update this parking space');
     }
 
-    // Validate bounds: occupied cannot exceed total or drop below 0
     ['car', 'bike', 'ev'].forEach(type => {
       if (slots[type] && slots[type].occupied !== undefined) {
         const total = parking.slots[type as keyof typeof parking.slots].total;
@@ -78,7 +91,8 @@ export class ParkingService implements IParkingService {
     return updated;
   }
 
-  async deleteParking(id: string, businessId: string): Promise<boolean> {
+  async deleteParking(id: string, userId: string, isBusinessUser: boolean): Promise<boolean> {
+    const businessId = await this.getBusinessIdForUser(userId, isBusinessUser);
     const parking = await this.parkingRepository.findById(id);
     if (!parking) throw new NotFoundError('Parking not found');
     
@@ -89,7 +103,7 @@ export class ParkingService implements IParkingService {
     return this.parkingRepository.delete(id);
   }
 
-  async findNearbyParking(lat: number, lng: number, radius: number = 5000, filters: any = {}): Promise<IParkingDocument[]> {
+  async findNearbyParking(lat: number, lng: number, radius: number = 5000, filters: any = {}): Promise<ParkingDto[]> {
     const query: any = {};
     if (filters.isFree) query.pricingType = 'FREE';
     if (filters.type) query.type = { $in: [filters.type] };

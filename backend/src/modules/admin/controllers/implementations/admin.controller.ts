@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { IAdminController } from '../interfaces/admin.controller.interface';
 import { IAdminService } from '../../services/interfaces/admin.service.interface';
 import { sendSuccess, sendCreated } from '../../../../shared/middleware/response.middleware';
+import { catchAsync } from '../../../../shared/utils/catch-async';
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../../../core/container/types';
@@ -12,39 +13,23 @@ export class AdminController implements IAdminController {
     @inject(TYPES.AdminService) private readonly adminService: IAdminService
   ) {}
 
-  async getAllBusinesses(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const businesses = await this.adminService.getAllBusinesses();
-      sendSuccess(res, businesses.map((b) => b.props));
-    } catch (err) {
-      next(err);
-    }
-  }
+  getAllBusinesses = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const businesses = await this.adminService.getAllBusinesses();
+    sendSuccess(res, businesses.map((b) => b));
+  });
 
-  async createAdminBusiness(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const business = await this.adminService.createAdminBusiness(req.body);
-      sendCreated(res, business.props);
-    } catch (err) {
-      next(err);
-    }
-  }
+  createAdminBusiness = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const business = await this.adminService.createAdminBusiness(req.body);
+    sendCreated(res, business);
+  });
 
-  async approveBusiness(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const business = await this.adminService.approveBusiness(req.params.id);
-      sendSuccess(res, business.props);
-    } catch (err) {
-      next(err);
-    }
-  }
+  approveBusiness = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const business = await this.adminService.approveBusiness(req.params.id);
+    sendSuccess(res, business);
+  });
 
-  async rejectBusiness(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const business = await this.adminService.rejectBusiness(req.params.id);
-      sendSuccess(res, business.props);
-    } catch (err) {
-      next(err);
-    }
-  }
+  rejectBusiness = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const business = await this.adminService.rejectBusiness(req.params.id);
+    sendSuccess(res, business);
+  });
 }

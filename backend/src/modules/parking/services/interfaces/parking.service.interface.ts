@@ -1,12 +1,12 @@
-import { IParkingDocument } from '../../../../models/parking.model';
+import { ParkingDto } from '../../dtos/parking.dto';
 
 export interface IParkingService {
-  createBusinessParking(businessId: string, data: Partial<IParkingDocument>): Promise<IParkingDocument>;
-  createCommunityParking(userId: string, data: Partial<IParkingDocument>): Promise<IParkingDocument>;
-  getParkingById(id: string): Promise<IParkingDocument>;
-  getBusinessParking(businessId: string): Promise<IParkingDocument[]>;
-  updateParking(id: string, businessId: string, data: Partial<IParkingDocument>): Promise<IParkingDocument>;
-  deleteParking(id: string, businessId: string): Promise<boolean>;
-  findNearbyParking(lat: number, lng: number, radius: number, filters?: any): Promise<IParkingDocument[]>;
-  updateAvailability(id: string, businessId: string, slots: any): Promise<IParkingDocument>;
+  createBusinessParking(userId: string, isBusinessUser: boolean, data: Partial<ParkingDto>): Promise<ParkingDto>;
+  createCommunityParking(userId: string, data: Partial<ParkingDto>): Promise<ParkingDto>;
+  getParkingById(id: string): Promise<ParkingDto>;
+  getBusinessParking(userId: string, isBusinessUser: boolean): Promise<ParkingDto[]>;
+  updateParking(id: string, userId: string, isBusinessUser: boolean, data: Partial<ParkingDto>): Promise<ParkingDto>;
+  deleteParking(id: string, userId: string, isBusinessUser: boolean): Promise<boolean>;
+  findNearbyParking(lat: number, lng: number, radius: number, filters?: any): Promise<ParkingDto[]>;
+  updateAvailability(id: string, userId: string, isBusinessUser: boolean, slots: any): Promise<ParkingDto>;
 }

@@ -1,28 +1,26 @@
 import { IPostRepository } from '../interfaces/post.repository.interface';
-import { Post, PostProps } from '../../entities/post.entity';
+import { PostDto } from '../../dtos/post.dto';
+import { PostMapper } from '../../mappers/post.mapper';
 import { PostModel, LikeModel, CommentModel, IPostDocument } from '../../../../models/post.model';
-
-// ─── Mongoose Post Repository ──────────────────────────────────────────────────
-
 import { injectable } from 'inversify';
 
 @injectable()
 export class MongoosePostRepository implements IPostRepository {
-  async create(postEntity: Post): Promise<Post> {
+  async create(post: Partial<PostDto>): Promise<PostDto> {
     const created = await PostModel.create({
-      businessId: postEntity.props.businessId,
-      text: postEntity.props.text,
-      image: postEntity.props.image,
-      tags: postEntity.props.tags ?? [],
-      location: postEntity.props.location,
-      views: postEntity.props.views ?? 0,
+      businessId: post.businessId,
+      text: post.text,
+      image: post.image,
+      tags: post.tags ?? [],
+      location: post.location,
+      views: post.views ?? 0,
     });
-    return this.toDomain(created);
+    return PostMapper.toDto(created);
   }
 
-  async findById(id: string): Promise<Post | null> {
+  async findById(id: string): Promise<PostDto | null> {
     const doc = await PostModel.findById(id).exec();
-    return doc ? this.toDomain(doc) : null;
+    return doc ? PostMapper.toDto(doc) : null;
   }
 
   async findAll(
@@ -58,11 +56,11 @@ export class MongoosePostRepository implements IPostRepository {
           if (like) isLiked = true;
         }
 
-        const domainPost = this.toDomain(p);
+        const domainPost = PostMapper.toDto(p);
         const businessObj = (p.businessId as any) || {};
 
         return {
-          ...domainPost.props,
+          ...domainPost,
           _count: { likes: likeCount, comments: commentCount },
           isLikedByMe: isLiked,
           business: {
@@ -79,7 +77,7 @@ export class MongoosePostRepository implements IPostRepository {
     return { posts: formattedPosts, nextCursor };
   }
 
-  async update(id: string, text?: string, image?: string): Promise<Post> {
+  async update(id: string, text?: string, image?: string): Promise<PostDto> {
     const updateData: Record<string, unknown> = {};
     if (text !== undefined) updateData.text = text;
     if (image !== undefined) updateData.image = image;
@@ -91,7 +89,7 @@ export class MongoosePostRepository implements IPostRepository {
     ).exec();
 
     if (!updated) throw new Error('Post not found');
-    return this.toDomain(updated);
+    return PostMapper.toDto(updated);
   }
 
   async delete(id: string): Promise<void> {
@@ -123,20 +121,44 @@ export class MongoosePostRepository implements IPostRepository {
     return CommentModel.find({ postId }).sort({ createdAt: -1 }).exec();
   }
 
-  private toDomain(doc: IPostDocument): Post {
-    const props: PostProps = {
-      id: doc._id.toString(),
-      text: doc.text,
-      image: doc.image ?? null,
-      tags: doc.tags ?? [],
-      location: doc.location ?? null,
-      views: doc.views ?? 0,
-      businessId: (doc.businessId as any)._id
-        ? (doc.businessId as any)._id.toString()
-        : doc.businessId.toString(),
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
-    };
-    return new Post(props);
+  async getFlashDeals(businessId?: string): Promise<unknown[]> {
+    const { Types } = require('mongoose');
+    const { FlashDealModel } = require('../../../../models/misc.model');
+    const { BusinessModel } = require('../../../../models/business.model');
+
+    const where: Record<string, unknown> = { activeUntil: { $gt: new Date() } };
+    if (businessId) where.businessId = new Types.ObjectId(businessId);
+
+    const deals = await FlashDealModel.find(where).sort({ createdAt: -1 }).exec();
+
+    return Promise.all(
+      deals.map(async (deal: any) => {
+        const business = await BusinessModel.findById(deal.businessId).exec();
+        return {
+          ...deal.toObject(),
+          business: business
+            ? {
+                id: business._id,
+                name: business.name,
+                logo: business.logo,
+                isVerified: business.isVerified,
+                username: business.username,
+              }
+            : null,
+        };
+      })
+    );
+  }
+
+  async createFlashDeal(businessId: string, offer: string, image: string, type: string, navigateLink?: string): Promise<unknown> {
+    const { FlashDealModel } = require('../../../../models/misc.model');
+    return FlashDealModel.create({
+      businessId,
+      offer,
+      image,
+      type,
+      navigateLink,
+      activeUntil: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+    });
   }
 }

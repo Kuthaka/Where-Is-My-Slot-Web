@@ -1,6 +1,8 @@
-import { IBusinessRepository } from '../interfaces/business.repository.interface';
-import { Business, BusinessProps } from '../../entities/business.entity';
+import { IBusinessRepository, IExploreBusinessesFilters, IExploreBusinessesResult } from '../interfaces/business.repository.interface';
+import { BusinessDto } from '../../dtos/business.dto';
+import { BusinessMapper } from '../../mappers/business.mapper';
 import { BusinessModel, IBusinessDocument } from '../../../../models/business.model';
+import { Types } from 'mongoose';
 
 // ─── Mongoose Business Repository ─────────────────────────────────────────────
 
@@ -8,44 +10,44 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class MongooseBusinessRepository implements IBusinessRepository {
-  async findById(id: string): Promise<Business | null> {
+  async findById(id: string): Promise<BusinessDto | null> {
     const doc = await BusinessModel.findById(id).exec();
-    return doc ? this.toDomain(doc) : null;
+    return doc ? BusinessMapper.toDto(doc) : null;
   }
 
-  async findByOwnerId(ownerId: string): Promise<Business[]> {
+  async findByOwnerId(ownerId: string): Promise<BusinessDto[]> {
     const docs = await BusinessModel.find({ ownerId }).exec();
-    return docs.map((d: any) => this.toDomain(d));
+    return docs.map((d: any) => BusinessMapper.toDto(d));
   }
 
-  async findByUsername(username: string): Promise<Business | null> {
+  async findByUsername(username: string): Promise<BusinessDto | null> {
     const doc = await BusinessModel.findOne({ username }).exec();
-    return doc ? this.toDomain(doc) : null;
+    return doc ? BusinessMapper.toDto(doc) : null;
   }
 
-  async findByContactEmail(email: string): Promise<Business | null> {
+  async findByContactEmail(email: string): Promise<BusinessDto | null> {
     const doc = await BusinessModel.findOne({ contactEmail: email }).exec();
-    return doc ? this.toDomain(doc) : null;
+    return doc ? BusinessMapper.toDto(doc) : null;
   }
 
-  async findAll(): Promise<Business[]> {
+  async findAll(): Promise<BusinessDto[]> {
     const docs = await BusinessModel.find().exec();
-    return docs.map((d: any) => this.toDomain(d));
+    return docs.map((d: any) => BusinessMapper.toDto(d));
   }
 
-  async create(business: Business): Promise<Business> {
-    const propsToSave: Record<string, unknown> = { ...business.props };
+  async create(business: Partial<BusinessDto>): Promise<BusinessDto> {
+    const propsToSave: Record<string, unknown> = { ...business };
     if (!propsToSave.ownerId) delete propsToSave.ownerId;
     if (!propsToSave.username) delete propsToSave.username;
     delete propsToSave.id; // Let MongoDB generate the _id
 
     const created = await BusinessModel.create(propsToSave);
-    return this.toDomain(created);
+    return BusinessMapper.toDto(created);
   }
 
-  async update(id: string, data: Partial<Business>): Promise<Business> {
+  async update(id: string, data: Partial<BusinessDto>): Promise<BusinessDto> {
     // Support both passing raw props and a Business entity
-    const updateData = (data as any).props || data;
+    const updateData = { ...data };
     delete updateData.id;
 
     const query: any = { $set: updateData };
@@ -61,58 +63,51 @@ export class MongooseBusinessRepository implements IBusinessRepository {
     ).exec();
 
     if (!updated) throw new Error('Business not found');
-    return this.toDomain(updated);
+    return BusinessMapper.toDto(updated);
   }
 
-  private toDomain(doc: IBusinessDocument): Business {
-    const props: BusinessProps = {
-      id: doc._id.toString(),
-      ownerId: (doc.ownerId?.toString()) ?? null,
-      // Merchant auth
-      contactEmail: doc.contactEmail,
-      passwordHash: doc.passwordHash ?? null,
-      isPasswordSet: doc.isPasswordSet,
-      // Profile
-      name: doc.name,
-      username: doc.username ?? null,
-      tagline: doc.tagline ?? null,
-      description: doc.description ?? null,
-      establishedYear: doc.establishedYear ?? null,
-      gstNumber: doc.gstNumber ?? null,
-      contactPerson: doc.contactPerson ?? null,
-      phone: doc.phone ?? null,
-      email: doc.email ?? null,
-      websiteUrl: doc.websiteUrl ?? null,
-      whatsappNumber: doc.whatsappNumber ?? null,
-      mobileNumbers: doc.mobileNumbers ?? [],
-      landlineNumbers: doc.landlineNumbers ?? [],
-      emails: doc.emails ?? [],
-      address: doc.address ?? null,
-      pincode: doc.pincode ?? null,
-      plotNo: doc.plotNo ?? null,
-      buildingName: doc.buildingName ?? null,
-      streetName: doc.streetName ?? null,
-      landmark: doc.landmark ?? null,
-      area: doc.area ?? null,
-      city: doc.city ?? null,
-      state: doc.state ?? null,
-      latitude: doc.latitude ?? null,
-      longitude: doc.longitude ?? null,
-      googleMapsUrl: doc.googleMapsUrl ?? null,
-      timings: doc.timings ?? null,
-      primaryCategory: doc.primaryCategory ?? null,
-      subCategories: doc.subCategories ?? [],
-      amenities: doc.amenities ?? [],
-      parking: doc.parking ?? null,
-      logo: doc.logo ?? null,
-      coverPhoto: doc.coverPhoto ?? null,
-      images: doc.images ?? [],
-      socialLinks: doc.socialLinks ?? null,
-      isVerified: doc.isVerified,
-      status: doc.status,
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
+  async exploreBusinesses(filters: IExploreBusinessesFilters): Promise<IExploreBusinessesResult> {
+    const { search, category, city, cursor, limit } = filters;
+    const take = limit ? Math.min(limit, 20) : 12;
+    const where: Record<string, unknown> = { status: 'APPROVED' };
+
+    if (city) {
+      where.city = { $regex: city, $options: 'i' };
+    }
+
+    if (search) {
+      where.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { tagline: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { area: { $regex: search, $options: 'i' } },
+        { city: { $regex: search, $options: 'i' } },
+        { primaryCategory: { $regex: search, $options: 'i' } },
+      ];
+    }
+    
+    if (category && category !== 'All') {
+      where.primaryCategory = { $regex: category, $options: 'i' };
+    }
+    
+    if (cursor) {
+      where._id = { $lt: new Types.ObjectId(cursor) };
+    }
+
+    const businesses = await BusinessModel.find(where)
+      .sort({ isVerified: -1, createdAt: -1 })
+      .limit(take + 1)
+      .exec();
+
+    const hasMore = businesses.length > take;
+    const items = hasMore ? businesses.slice(0, take) : businesses;
+    const nextCursor = hasMore ? items[items.length - 1]._id.toString() : null;
+
+    return {
+      businesses: items.map((d: any) => BusinessMapper.toDto(d)),
+      nextCursor,
+      hasMore,
     };
-    return new Business(props);
   }
+
 }

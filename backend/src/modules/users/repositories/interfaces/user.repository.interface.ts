@@ -1,11 +1,11 @@
-import { User } from '../../entities/user.entity';
+import { UserDto } from '../../dtos/user.dto';
 
 // ─── User Repository Interface ─────────────────────────────────────────────────
 
 export interface IUserRepository {
-  findById(id: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
-  findByUsername(username: string): Promise<User | null>;
-  create(user: User): Promise<User>;
-  update(id: string, data: Partial<User>): Promise<User>;
+  findById(id: string): Promise<UserDto | null>;
+  findByEmail(email: string): Promise<UserDto | null>;
+  findByUsername(username: string): Promise<UserDto | null>;
+  create(user: Partial<UserDto>): Promise<UserDto>;
+  update(id: string, data: Partial<UserDto>): Promise<UserDto>;
 }

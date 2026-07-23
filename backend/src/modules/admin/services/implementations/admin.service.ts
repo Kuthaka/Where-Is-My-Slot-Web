@@ -1,6 +1,6 @@
 import { IAdminService } from '../interfaces/admin.service.interface';
 import { IBusinessRepository } from '../../../businesses/repositories/interfaces/business.repository.interface';
-import { Business } from '../../../businesses/entities/business.entity';
+import { BusinessDto } from '../../../businesses/dtos/business.dto';
 import { NotFoundError } from '../../../../shared/errors/app-error';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -13,32 +13,32 @@ export class AdminService implements IAdminService {
     @inject(TYPES.BusinessRepository) private readonly businessRepository: IBusinessRepository
   ) {}
 
-  async getAllBusinesses(): Promise<Business[]> {
+  async getAllBusinesses(): Promise<BusinessDto[]> {
     return this.businessRepository.findAll();
   }
 
-  async approveBusiness(id: string): Promise<Business> {
+  async approveBusiness(id: string): Promise<BusinessDto> {
     const business = await this.businessRepository.findById(id);
-    if (!business) throw new NotFoundError('Business not found');
+    if (!business) throw new NotFoundError('BusinessDto not found');
 
-    business.props.status = 'APPROVED';
-    business.props.isVerified = true;
+    business.status = 'APPROVED';
+    business.isVerified = true;
 
     return this.businessRepository.update(id, business);
   }
 
-  async rejectBusiness(id: string): Promise<Business> {
+  async rejectBusiness(id: string): Promise<BusinessDto> {
     const business = await this.businessRepository.findById(id);
-    if (!business) throw new NotFoundError('Business not found');
+    if (!business) throw new NotFoundError('BusinessDto not found');
 
-    business.props.status = 'REJECTED';
-    business.props.isVerified = false;
+    business.status = 'REJECTED';
+    business.isVerified = false;
 
     return this.businessRepository.update(id, business);
   }
 
-  async createAdminBusiness(data: Record<string, unknown>): Promise<Business> {
-    const business = new Business({
+  async createAdminBusiness(data: Record<string, unknown>): Promise<BusinessDto> {
+    const business: Partial<BusinessDto> = {
       id: uuidv4(),
       ownerId: (data.ownerId as string) ?? null,
       contactEmail: (data.contactEmail as string) ?? (data.email as string) ?? '',
@@ -83,7 +83,7 @@ export class AdminService implements IAdminService {
       status: 'APPROVED',
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    };
 
     return this.businessRepository.create(business);
   }

@@ -1,29 +1,27 @@
 import { IUserRepository } from '../interfaces/user.repository.interface';
-import { User } from '../../entities/user.entity';
-import { UserModel, IUserDocument } from '../../../../models/user.model';
-
-// ─── Mongoose User Repository ──────────────────────────────────────────────────
-
+import { UserModel } from '../../../../models/user.model';
+import { UserDto } from '../../dtos/user.dto';
+import { UserMapper } from '../../mappers/user.mapper';
 import { injectable } from 'inversify';
 
 @injectable()
 export class MongooseUserRepository implements IUserRepository {
-  async findById(id: string): Promise<User | null> {
+  async findById(id: string): Promise<UserDto | null> {
     const doc = await UserModel.findById(id).exec();
-    return doc ? this.toDomain(doc) : null;
+    return doc ? UserMapper.toDto(doc) : null;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<UserDto | null> {
     const doc = await UserModel.findOne({ email }).exec();
-    return doc ? this.toDomain(doc) : null;
+    return doc ? UserMapper.toDto(doc) : null;
   }
 
-  async findByUsername(username: string): Promise<User | null> {
+  async findByUsername(username: string): Promise<UserDto | null> {
     const doc = await UserModel.findOne({ username }).exec();
-    return doc ? this.toDomain(doc) : null;
+    return doc ? UserMapper.toDto(doc) : null;
   }
 
-  async create(user: User): Promise<User> {
+  async create(user: Partial<UserDto>): Promise<UserDto> {
     const created = await UserModel.create({
       name: user.name,
       username: user.username ?? undefined,
@@ -34,10 +32,10 @@ export class MongooseUserRepository implements IUserRepository {
       isActive: user.isActive,
       location: user.location,
     });
-    return this.toDomain(created);
+    return UserMapper.toDto(created);
   }
 
-  async update(id: string, data: Partial<User>): Promise<User> {
+  async update(id: string, data: Partial<UserDto>): Promise<UserDto> {
     const updateFields: Record<string, unknown> = {};
     if (data.name !== undefined) updateFields.name = data.name;
     if (data.username !== undefined) updateFields.username = data.username ?? undefined;
@@ -55,22 +53,6 @@ export class MongooseUserRepository implements IUserRepository {
     ).exec();
 
     if (!updated) throw new Error('User not found');
-    return this.toDomain(updated);
-  }
-
-  private toDomain(doc: IUserDocument): User {
-    return new User(
-      doc._id.toString(),
-      doc.name,
-      doc.username ?? null,
-      doc.email,
-      doc.password ?? '',
-      doc.isPasswordSet,
-      doc.role,
-      doc.isActive,
-      doc.createdAt,
-      doc.updatedAt,
-      doc.location
-    );
+    return UserMapper.toDto(updated);
   }
 }

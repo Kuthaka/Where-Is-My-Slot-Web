@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { IAuthController } from '../interfaces/auth.controller.interface';
 import { IAuthService } from '../../services/interfaces/auth.service.interface';
 import { sendSuccess, sendCreated } from '../../../../shared/middleware/response.middleware';
-import { IUserRepository } from '../../../users/repositories/interfaces/user.repository.interface';
 import { AuthenticatedRequest } from '../../../../shared/middleware/auth.middleware';
+import { catchAsync } from '../../../../shared/utils/catch-async';
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../../../../core/container/types';
@@ -11,92 +11,48 @@ import { TYPES } from '../../../../core/container/types';
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
-    @inject(TYPES.AuthService) private readonly authService: IAuthService,
-    @inject(TYPES.UserRepository) private readonly userRepository: IUserRepository
+    @inject(TYPES.AuthService) private readonly authService: IAuthService
   ) {}
 
-  async sendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const result = await this.authService.sendOtp(req.body.email);
-      sendSuccess(res, result);
-    } catch (err) {
-      next(err);
-    }
-  }
+  sendOtp = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const result = await this.authService.sendOtp(req.body.email);
+    sendSuccess(res, result);
+  });
 
-  async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const result = await this.authService.verifyOtp(req.body.email, req.body.otp);
-      sendSuccess(res, result);
-    } catch (err) {
-      next(err);
-    }
-  }
+  verifyOtp = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const result = await this.authService.verifyOtp(req.body.email, req.body.otp);
+    sendSuccess(res, result);
+  });
 
-  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const result = await this.authService.login(req.body.email, req.body.password);
-      sendSuccess(res, result);
-    } catch (err) {
-      next(err);
-    }
-  }
+  login = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const result = await this.authService.login(req.body.email, req.body.password);
+    sendSuccess(res, result);
+  });
 
-  async register(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { firstName, lastName, username, email, password, otp } = req.body;
-      const name = `${firstName} ${lastName}`.trim();
-      const result = await this.authService.registerUser({ name, username, email, passwordPlain: password, otp });
-      sendCreated(res, result);
-    } catch (err) {
-      next(err);
-    }
-  }
+  register = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const { firstName, lastName, username, email, password, otp } = req.body;
+    const name = `${firstName} ${lastName}`.trim();
+    const result = await this.authService.registerUser({ name, username, email, passwordPlain: password, otp });
+    sendCreated(res, result);
+  });
 
-  async checkAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const { username, email } = req.query as { username?: string; email?: string };
-      const result: { usernameAvailable?: boolean; emailAvailable?: boolean } = {};
+  checkAvailability = catchAsync(async (req: Request, res: Response): Promise<void> => {
+    const { username, email } = req.query as { username?: string; email?: string };
+    const result = await this.authService.checkAvailability(username, email);
+    sendSuccess(res, result);
+  });
 
-      if (username) {
-        const existing = await this.userRepository.findByUsername(username);
-        result.usernameAvailable = !existing;
-      }
-      if (email) {
-        const existing = await this.userRepository.findByEmail(email);
-        result.emailAvailable = !existing;
-      }
+  setPassword = catchAsync(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const result = await this.authService.setPassword(
+      req.user!.id,
+      req.body.newPassword,
+      req.body.oldPassword
+    );
+    sendSuccess(res, result);
+  });
 
-      sendSuccess(res, result);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async setPassword(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const result = await this.authService.setPassword(
-        req.user!.id,
-        req.body.newPassword,
-        req.body.oldPassword
-      );
-      sendSuccess(res, result);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async getMe(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const user = await this.userRepository.findById(req.user!.id);
-      if (!user) {
-        sendSuccess(res, null);
-        return;
-      }
-      const { passwordHash, ...safeUser } = user as any;
-      sendSuccess(res, safeUser);
-    } catch (err) {
-      next(err);
-    }
-  }
+  getMe = catchAsync(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const user = await this.authService.getMe(req.user!.id);
+    sendSuccess(res, user);
+  });
 }

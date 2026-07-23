@@ -1,23 +1,29 @@
 import { injectable } from 'inversify';
 import { IParkingRepository } from '../interfaces/parking.repository.interface';
-import { ParkingModel, IParkingDocument } from '../../../../models/parking.model';
+import { ParkingModel } from '../../../../models/parking.model';
+import { ParkingDto } from '../../dtos/parking.dto';
+import { ParkingMapper } from '../../mappers/parking.mapper';
 
 @injectable()
 export class ParkingRepository implements IParkingRepository {
-  async create(data: Partial<IParkingDocument>): Promise<IParkingDocument> {
-    return ParkingModel.create(data);
+  async create(data: Partial<ParkingDto>): Promise<ParkingDto> {
+    const doc = await ParkingModel.create(data);
+    return ParkingMapper.toDto(doc);
   }
 
-  async findById(id: string): Promise<IParkingDocument | null> {
-    return ParkingModel.findById(id).populate('businessId', 'name logo coverPhoto isVerified');
+  async findById(id: string): Promise<ParkingDto | null> {
+    const doc = await ParkingModel.findById(id).populate('businessId', 'name logo coverPhoto isVerified');
+    return doc ? ParkingMapper.toDto(doc) : null;
   }
 
-  async findByBusinessId(businessId: string): Promise<IParkingDocument[]> {
-    return ParkingModel.find({ businessId }).sort({ createdAt: -1 });
+  async findByBusinessId(businessId: string): Promise<ParkingDto[]> {
+    const docs = await ParkingModel.find({ businessId }).sort({ createdAt: -1 });
+    return docs.map((d: any) => ParkingMapper.toDto(d));
   }
 
-  async update(id: string, data: Partial<IParkingDocument>): Promise<IParkingDocument | null> {
-    return ParkingModel.findByIdAndUpdate(id, { $set: data }, { new: true });
+  async update(id: string, data: Partial<ParkingDto>): Promise<ParkingDto | null> {
+    const doc = await ParkingModel.findByIdAndUpdate(id, { $set: data }, { new: true });
+    return doc ? ParkingMapper.toDto(doc) : null;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -25,7 +31,7 @@ export class ParkingRepository implements IParkingRepository {
     return !!result;
   }
 
-  async findNearby(lat: number, lng: number, maxDistance: number, query: any = {}): Promise<IParkingDocument[]> {
+  async findNearby(lat: number, lng: number, maxDistance: number, query: any = {}): Promise<ParkingDto[]> {
     const geoQuery = {
       location: {
         $near: {
@@ -39,6 +45,7 @@ export class ParkingRepository implements IParkingRepository {
       status: 'ACTIVE',
       ...query
     };
-    return ParkingModel.find(geoQuery).populate('businessId', 'name logo isVerified');
+    const docs = await ParkingModel.find(geoQuery).populate('businessId', 'name logo isVerified');
+    return docs.map((d: any) => ParkingMapper.toDto(d));
   }
 }
