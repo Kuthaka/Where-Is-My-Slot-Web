@@ -51,6 +51,7 @@ export default function MapPicker({ position, setPosition, readonly = false }: M
   const defaultCenter = { lat: 20.5937, lng: 78.9629 }; // Default India
   const [mapCenter, setMapCenter] = useState(position || defaultCenter);
   const searchRef = React.useRef<HTMLDivElement>(null);
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -68,29 +69,34 @@ export default function MapPicker({ position, setPosition, readonly = false }: M
 
   if (!mounted) return <div className="h-[300px] w-full bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />;
 
-  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchQuery(val);
-    
+
     if (!val.trim() || readonly) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
-    setSearching(true);
     setShowSuggestions(true);
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5`, {
-        headers: { "User-Agent": "Antigravity/1.0" }
-      });
-      const data = await res.json();
-      setSuggestions(data || []);
-    } catch (err) {
-      console.error("Geocoding failed", err);
-    } finally {
-      setSearching(false);
-    }
+
+    // Debounce: wait 400ms after user stops typing
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5&accept-language=en`
+        );
+        const data = await res.json();
+        setSuggestions(data || []);
+      } catch (err) {
+        console.error("Geocoding failed", err);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
   };
 
   const handleSelectLocation = (result: any) => {
